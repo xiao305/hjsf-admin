@@ -8,6 +8,11 @@
     <base href="https://admin.hjsf.uno/">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 修复：添加隐藏类 */
+        .hidden {
+            display: none;
+        }
+        
         /* 优化后的样式系统 */
         :root {
             --primary: #e4393c;
@@ -55,12 +60,12 @@
             align-items: center;
         }
 
-        .logo h2 { /* 修复1: 恢复logo字体大小 */
+        .logo h2 {
             color: var(--primary);
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 1.5rem; /* 设置一个明确的字体大小 */
+            font-size: 1.5rem; /* 确保字体大小 */
         }
 
         .nav-links {
@@ -394,10 +399,10 @@
             border-radius: 8px;
             display: flex;
             align-items: flex-end;
-            gap: 10px; /* 柱子之间的间距 */
-            padding: 20px 10px 40px 10px; /* 底部留出空间给标签 */
+            gap: 10px;
+            padding: 20px 10px 40px 10px;
             box-sizing: border-box;
-            overflow-x: auto; /* 如果柱子太多，允许横向滚动 */
+            overflow-x: auto;
         }
 
         .traffic-bar-container {
@@ -405,7 +410,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-width: 40px; /* 确保柱子容器有最小宽度 */
+            min-width: 40px;
         }
 
         .traffic-bar {
@@ -413,15 +418,7 @@
             background: var(--primary);
             border-radius: 4px 4px 0 0;
             transition: height 0.5s ease-out;
-            min-height: 2px; /* 防止访问量为0时柱子完全消失 */
-        }
-
-        .traffic-bar-label {
-            margin-top: 5px;
-            font-size: 0.8rem;
-            color: var(--gray);
-            text-align: center;
-            white-space: nowrap; /* 防止日期换行 */
+            min-height: 2px;
         }
 
         .traffic-bar-value {
@@ -431,7 +428,15 @@
             text-align: center;
         }
 
-        /* 管理员列表样式 - 修复2: 调整布局和增加间距 */
+        .traffic-bar-label {
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* 管理员列表样式 */
         .admin-list {
             margin-top: 20px;
         }
@@ -443,7 +448,7 @@
 
         .admin-list th,
         .admin-list td {
-            padding: 15px 20px; /* 增加内边距 */
+            padding: 15px 20px;
             text-align: left;
             border-bottom: 1px solid #eee;
         }
@@ -460,18 +465,29 @@
         /* 密码显示单元格样式 */
         .password-cell {
             cursor: pointer;
-            user-select: none; /* 防止文本选中 */
-            position: relative; /* 为可能的提示定位 */
+            user-select: none;
         }
 
         .password-display {
-            font-family: monospace; /* 密码用等宽字体显示 */
+            font-family: monospace;
         }
 
         .password-display .hidden {
             display: none;
         }
 
+        /* 加载指示器 */
+        .loading-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            z-index: 9999;
+        }
 
         /* 响应式设计 */
         @media (max-width: 768px) {
@@ -503,7 +519,7 @@
             /* 管理员列表响应式调整 */
             .admin-list th,
             .admin-list td {
-                padding: 10px 15px; /* 在小屏幕上适当减小内边距 */
+                padding: 10px 15px;
             }
         }
 
@@ -546,7 +562,7 @@
                  <!-- Logo 链接指向主站 -->
                  <a href="https://hjsf.uno" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
                      <i class="fas fa-utensils"></i>
-                     <h2>红姐私房美食</h2> <!-- 修复1: 使用 h2 标签 -->
+                     <h2>红姐私房美食</h2>
                  </a>
              </div>
             <div class="nav-links">
@@ -759,51 +775,121 @@
         let logs = JSON.parse(localStorage.getItem('adminLogs')) || [];
         let visits = JSON.parse(localStorage.getItem('siteVisits')) || { total: 0, daily: {} };
 
+        // --- 关键修改：添加数据加载状态 ---
+        let isDataLoading = false;
+        let dataLoadAttempts = 0;
+        const MAX_DATA_LOAD_ATTEMPTS = 5;
+        
+        // 显示加载指示器
+        function showLoading(message = "正在加载数据...") {
+            let loadingDiv = document.getElementById('loadingIndicator');
+            if (!loadingDiv) {
+                loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loadingIndicator';
+                loadingDiv.className = 'loading-indicator';
+                document.body.appendChild(loadingDiv);
+            }
+            loadingDiv.textContent = message;
+        }
+        
+        // 隐藏加载指示器
+        function hideLoading() {
+            const loadingDiv = document.getElementById('loadingIndicator');
+            if (loadingDiv) loadingDiv.remove();
+        }
+        
         // --- 新增：从阿里云 OSS 加载配置的核心函数 ---
-        // 注意：这个函数需要根据你的实际 OSS 配置进行调整
-        // 关键：使用您提供的正确 OSS 地址
         async function loadConfigFromOSSAndInitializeSettingsPanel() {
-             console.log("🔄 开始从阿里云 OSS 加载配置...");
-             try {
-                 // --- 关键修改：指向 admin.hjsf.uno 域名下的 OSS 配置文件 ---
-                 // 使用您提供的正确地址
-                 const ossUrl = 'https://xiao-config-bucket.oss-cn-hangzhou.aliyuncs.com/test-config.json';
-                 const response = await fetch(ossUrl + '?t=' + new Date().getTime(), { cache: 'no-store' }); // 添加时间戳防止缓存
-                 // --- 结束关键修改 ---
-                 if (!response.ok) {
-                     throw new Error(`HTTP error! status: ${response.status}`);
-                 }
-                 const data = await response.json();
-                 console.log("✅ 成功从 OSS 读取到配置:", data);
-
-                 if (data && data.pageStatusConfig) {
-                     console.log("✅ 成功从 OSS 读取到配置:", data);
-                     // - 关键修改：更新全局配置变量和密码变量以及管理员账号变量 -
-                     window.pageStatusConfig = data.pageStatusConfig;
-                     window.pagePasswords = data.pagePasswords || {};
-                     window.adminAccounts = data.adminAccounts || {}; // <<<- 新增：更新全局管理员账号变量
-                     window.messages = data.messages || []; // <<<- 新增：更新全局留言变量
-                     window.logs = data.adminLogs || []; // <<<- 新增：更新全局日志变量
-                     window.visits = data.siteVisits || { total: 0, daily: {} }; // <<<- 新增：更新全局访问量变量
-                     // - 结束关键修改 -
-                     console.log("🔄 已更新全局配置变量");
-
-                     // - 关键修改：使用从 OSS 读取的最新配置初始化设置面板 UI -
-                     initializeSettingsPanel();
-                     // - 结束关键修改 -
-                 } else {
-                     console.log("OSS: 远程配置为空或格式不正确");
-                     // 回退到 localStorage
-                     initializeSettingsPanel();
-                 }
-             } catch (fetchError) {
-                 console.error("❌ 从阿里云 OSS 加载配置失败:", fetchError);
-                 // 回退到 localStorage
-                 initializeSettingsPanel();
-             }
+            console.log("🔄 开始从阿里云 OSS 加载配置...");
+            showLoading("正在从云端加载数据...");
+            
+            isDataLoading = true;
+            dataLoadAttempts++;
+            
+            try {
+                // --- 关键修改：使用您提供的正确 OSS 地址 ---
+                const ossUrl = 'https://xiao-config-bucket.oss-cn-hangzhou.aliyuncs.com/test-config.json';
+                const response = await fetch(ossUrl + '?t=' + new Date().getTime(), { 
+                    cache: 'no-store',
+                    mode: 'cors'
+                });
+                
+                console.log("Fetch 响应对象:", response);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.log("OSS: 配置文件未找到");
+                        throw new Error("配置文件未找到 (404)");
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // 检查 Content-Type
+                const contentType = response.headers.get('content-type');
+                console.log("OSS: 响应 Content-Type:", contentType);
+                
+                let data = null;
+                if (contentType && contentType.includes('application/json')) {
+                    try {
+                        data = await response.json();
+                        console.log("✅ 成功解析 JSON 数据");
+                    } catch (parseError) {
+                        console.error("OSS: 将文本内容解析为 JSON 失败:", parseError);
+                        throw new Error("无法解析JSON数据");
+                    }
+                } else {
+                    console.error("OSS: 响应不是 JSON 类型:", contentType);
+                    throw new Error("响应不是JSON类型");
+                }
+                
+                if (data && data.pageStatusConfig) {
+                    console.log("✅ 成功从 OSS 读取到配置:", data);
+                    
+                    // - 关键修改：更新全局配置变量和所有数据 -
+                    window.pageStatusConfig = data.pageStatusConfig;
+                    window.pagePasswords = data.pagePasswords || {};
+                    window.adminAccounts = data.adminAccounts || {}; 
+                    window.messages = data.messages || []; 
+                    window.logs = data.adminLogs || []; 
+                    window.visits = data.siteVisits || { total: 0, daily: {} }; 
+                    
+                    console.log("📊 访问量数据:", window.visits);
+                    console.log("💬 留言数据:", window.messages);
+                    console.log("👥 管理员账号:", window.adminAccounts);
+                    console.log("🔄 已更新所有全局配置和数据变量");
+                    
+                    // 初始化设置面板 UI
+                    initializeSettingsPanel();
+                } else {
+                    console.log("OSS: 远程配置为空或格式不正确");
+                    // 回退到 localStorage
+                    initializeSettingsPanel();
+                }
+                
+                isDataLoading = false;
+                hideLoading();
+                return true;
+            } catch (fetchError) {
+                console.error("❌ 从阿里云 OSS 加载配置失败:", fetchError);
+                
+                isDataLoading = false;
+                hideLoading();
+                
+                // 如果尝试次数未达到上限，稍后重试
+                if (dataLoadAttempts < MAX_DATA_LOAD_ATTEMPTS) {
+                    const retryDelay = 1000 * dataLoadAttempts; // 指数退避
+                    console.log(`将在 ${retryDelay/1000} 秒后重试 (${dataLoadAttempts}/${MAX_DATA_LOAD_ATTEMPTS})...`);
+                    setTimeout(loadConfigFromOSSAndInitializeSettingsPanel, retryDelay);
+                } else {
+                    // 最终回退到 localStorage
+                    console.log("❌ 达到最大重试次数，回退到本地存储数据");
+                    initializeSettingsPanel();
+                }
+                
+                return false;
+            }
         }
         // --- 结束新增 ---
-
 
         // 初始化设置面板 UI
         function initializeSettingsPanel() {
@@ -813,7 +899,16 @@
             const passwords = window.pagePasswords || pagePasswords;
             // 修复：优先使用从 OSS 加载的全局管理员账号
             const accounts = window.adminAccounts || adminAccounts;
-
+            // 修复：优先使用从 OSS 加载的全局留言和访问量
+            const messagesData = window.messages || messages;
+            const visitsData = window.visits || visits;
+            
+            console.log("🔧 使用的配置:", config);
+            console.log("🔧 使用的密码:", passwords);
+            console.log("🔧 使用的管理员账号:", accounts);
+            console.log("🔧 使用的留言数据:", messagesData);
+            console.log("🔧 使用的访问量数据:", visitsData);
+            
             // 初始化页面状态设置
             Object.keys(config).forEach(pageId => {
                 const pageConfig = config[pageId];
@@ -843,47 +938,69 @@
                 loadAdminList();
             }
 
-            // 更新统计信息
+            // 更新统计信息 - 确保使用正确的数据源
             updateStats();
+            // 显式加载留言和日志
             loadMessages();
             loadLogs();
-            drawTrafficChart(); // 修复3: 初始化时绘制流量图
+            // 绘制流量图
+            drawTrafficChart();
+            
             console.log("🔧 设置面板 UI 初始化完成");
         }
-
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log("🔧 页面加载完成，开始初始化...");
+            
+            // --- 关键修改：添加移动设备检测 ---
+            function isMobileDevice() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            }
+            
+            if (isMobileDevice()) {
+                alert("管理员后台仅支持电脑访问，请使用电脑浏览器访问。");
+                window.location.href = 'https://hjsf.uno/';
+                return;
+            }
+            // --- 结束关键修改 ---
+            
             // - 新增：页面加载时，首先尝试从 OSS 加载最新的配置和数据 -
-            loadConfigFromOSSAndInitializeSettingsPanel().then(() => {
-                console.log('✅ 页面加载时成功从 OSS 加载配置并初始化 UI');
+            loadConfigFromOSSAndInitializeSettingsPanel().then(success => {
+                if (success) {
+                    console.log('✅ 页面加载时成功从 OSS 加载配置并初始化 UI');
+                } else {
+                    console.log('⚠️ 页面加载时从 OSS 加载配置并初始化 UI 未完全成功，但已初始化');
+                }
             }).catch((error) => {
                 console.error('❌ 页面加载时从 OSS 加载配置并初始化 UI 失败:', error);
                 // 即使加载失败，也使用本地默认值初始化
-                // initializeSettingsPanel(); // 这行现在在 loadConfigFromOSSAndInitializeSettingsPanel 内部调用
+                initializeSettingsPanel();
             });
+            
             console.log("✅ 页面加载和配置初始化完成");
         });
 
-
         // 管理员登录 - 修复：确保始终阻止默认提交，并优先使用从 OSS 加载的账号信息
-        document.getElementById('adminLogin').addEventListener('submit', function(e) { // 使用正确的表单ID
+        document.getElementById('adminLogin').addEventListener('submit', function(e) {
             e.preventDefault(); // 关键：绝对阻止表单默认提交和页面刷新
+            
+            // 显示加载状态
+            showLoading("正在验证登录信息...");
+            
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
             // - 关键修改：优先使用从 OSS 加载的全局 adminAccounts，回退到局部变量 -
-            // 这确保了新设备在加载完 OSS 配置后，能使用其中的账号信息进行登录
             const accountsToUse = window.adminAccounts || adminAccounts;
-            console.log("登录验证时使用的账号列表 (accountsToUse):", accountsToUse); // 调试日志，可以查看
+            console.log("登录验证时使用的账号列表 (accountsToUse):", accountsToUse);
             // - 结束关键修改 -
 
             const storedHash = accountsToUse[username];
 
-            if(storedHash && storedHash === btoa(password)) { // 使用 Base64 解码比较
+            if(storedHash && storedHash === btoa(password)) {
                 isAdminLoggedIn = true;
-                currentAdminUser = username; // 记录当前用户
+                currentAdminUser = username;
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('adminPanel').style.display = 'block';
                 document.getElementById('currentAdminUser').textContent = `当前用户: ${username}`;
@@ -891,57 +1008,62 @@
                 addLog('管理员登录', `管理员 ${username} 登录系统`);
                 console.log(`管理员 ${username} 登录成功`);
                 alert(`欢迎，${username}！`);
-
+                
+                // 隐藏加载状态
+                hideLoading();
+                
                 // - 新增：登录成功后，从 OSS 加载最新的配置和数据并更新 UI -
-                loadConfigFromOSSAndInitializeSettingsPanel().then(() => {
-                    console.log('✅ 登录后成功从 OSS 加载配置并初始化 UI');
-                }).catch((error) => {
-                    console.error('❌ 登录后从 OSS 加载配置并初始化 UI 失败:', error);
-                    // 即使加载失败，也使用本地默认值初始化
-                    // initializeSettingsPanel(); // initializeSettingsPanel 已在 loadConfigFromOSSAndInitializeSettingsPanel 内部或其失败回调中被调用
-                });
+                loadConfigFromOSSAndInitializeSettingsPanel();
                 // - 结束新增 -
-
             } else {
-                alert('管理员账号或密码错误！'); // 保持一致的提示
+                // 隐藏加载状态
+                hideLoading();
+                alert('管理员账号或密码错误！');
                 console.log(`管理员 ${username} 登录失败：账号或密码错误`);
-                // 可选：打印一下当前使用的账号列表，方便调试
                 console.log("当前用于验证的账号列表 (accountsToUse):", accountsToUse);
             }
         });
 
         // 退出登录
         document.getElementById('logoutBtn').addEventListener('click', function(e) {
-            e.preventDefault(); // 阻止默认的 # 跳转行为
+            e.preventDefault();
             isAdminLoggedIn = false;
-            currentAdminUser = null; // 清除当前用户记录
+            currentAdminUser = null;
             document.getElementById('loginSection').style.display = 'block';
             document.getElementById('adminPanel').style.display = 'none';
             document.getElementById('currentAdminUser').textContent = '';
-            // 修复：重置登录表单
-            document.getElementById('adminLogin').reset(); // 使用正确的表单ID
+            document.getElementById('adminLogin').reset();
             addLog('退出登录', '管理员退出了系统');
         });
 
-        // 更新统计信息
+        // 更新统计信息 - 确保使用正确的数据源
         function updateStats() {
-            document.getElementById('totalVisits').textContent = visits.total || 0;
-            document.getElementById('totalMessagesHeader').textContent = messages.length || 0;
-            const unreadCount = messages.filter(msg => !msg.read).length;
+            // 优先使用全局变量
+            const totalVisits = window.visits?.total || visits.total || 0;
+            const messagesData = window.messages || messages;
+            
+            document.getElementById('totalVisits').textContent = totalVisits;
+            document.getElementById('totalMessagesHeader').textContent = messagesData.length;
+            
+            const unreadCount = messagesData.filter(msg => !msg.read).length;
             document.getElementById('unreadMessages').textContent = unreadCount;
+            
+            console.log(`📊 统计信息更新 - 访问量: ${totalVisits}, 留言数: ${messagesData.length}, 未读: ${unreadCount}`);
         }
 
-        // 加载并显示留言
+        // 加载并显示留言 - 确保使用正确的数据源
         function loadMessages() {
+            const messagesData = window.messages || messages;
             const messagesList = document.getElementById('messagesList');
             messagesList.innerHTML = '';
+            
             // 按时间倒序显示
-            messages.slice().reverse().forEach((message, index) => {
-                const originalIndex = messages.length - 1 - index;
+            messagesData.slice().reverse().forEach((message, index) => {
+                const originalIndex = messagesData.length - 1 - index;
                 const row = document.createElement('div');
                 row.className = 'message-item';
                 if (!message.read) {
-                    row.style.backgroundColor = '#FFF0F0'; // 未读消息高亮
+                    row.style.backgroundColor = '#FFF0F0';
                 }
                 row.innerHTML = `
                     <div class="message-header">
@@ -966,16 +1088,30 @@
             document.querySelectorAll('.read-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const index = parseInt(this.getAttribute('data-index'));
-                    messages[index].read = true;
-                    localStorage.setItem('messages', JSON.stringify(messages));
-                    // 同步到全局变量 (如果 window.messages 存在)
+                    messagesData[index].read = true;
+                    
+                    // 更新全局变量
                     if (window.messages) {
-                        window.messages = messages;
+                        window.messages[index].read = true;
                     }
+                    
                     // 记录日志
-                    addLog('标为已读', `管理员 ${currentAdminUser} 将 ${messages[index].name} 的留言标为已读`);
-                    loadMessages(); // 重新加载
-                    updateStats(); // 更新统计
+                    addLog('标为已读', `管理员 ${currentAdminUser} 将 ${messagesData[index].name} 的留言标为已读`);
+                    
+                    // 重新加载
+                    loadMessages();
+                    updateStats();
+                    
+                    // 同步到云端
+                    syncConfigToFC({
+                        pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
+                        pagePasswords: window.pagePasswords || pagePasswords,
+                        adminAccounts: window.adminAccounts || adminAccounts,
+                        messages: window.messages || messages,
+                        adminLogs: window.logs || logs,
+                        siteVisits: window.visits || visits,
+                        timestamp: new Date().toISOString()
+                    });
                 });
             });
 
@@ -985,15 +1121,30 @@
                     const index = parseInt(this.getAttribute('data-index'));
                     if(confirm('确定要删除这条留言吗？')) {
                         // 记录删除日志
-                        addLog('删除留言', `管理员 ${currentAdminUser} 删除了 ${messages[index].name} 的留言`);
-                        messages.splice(index, 1);
-                        localStorage.setItem('messages', JSON.stringify(messages));
-                        // 同步到全局变量 (如果 window.messages 存在)
+                        addLog('删除留言', `管理员 ${currentAdminUser} 删除了 ${messagesData[index].name} 的留言`);
+                        
+                        // 从数组中删除
+                        messagesData.splice(index, 1);
+                        
+                        // 更新全局变量
                         if (window.messages) {
-                            window.messages = messages;
+                            window.messages = messagesData;
                         }
-                        loadMessages(); // 重新加载
-                        updateStats(); // 更新统计
+                        
+                        // 重新加载
+                        loadMessages();
+                        updateStats();
+                        
+                        // 同步到云端
+                        syncConfigToFC({
+                            pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
+                            pagePasswords: window.pagePasswords || pagePasswords,
+                            adminAccounts: window.adminAccounts || adminAccounts,
+                            messages: window.messages || messages,
+                            adminLogs: window.logs || logs,
+                            siteVisits: window.visits || visits,
+                            timestamp: new Date().toISOString()
+                        });
                     }
                 });
             });
@@ -1002,7 +1153,7 @@
             document.querySelectorAll('.export-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const index = parseInt(this.getAttribute('data-index'));
-                    const message = messages[index];
+                    const message = messagesData[index];
                     const content = `姓名: ${message.name}\n电话: ${message.phone}\n留言: ${message.message}\n时间: ${message.timestamp}`;
 
                     // 记录导出日志
@@ -1022,12 +1173,13 @@
             });
         }
 
-        // 加载并显示日志
+        // 加载并显示日志 - 确保使用正确的数据源
         function loadLogs() {
+            const logsData = window.logs || logs;
             const logsList = document.getElementById('logsList');
             logsList.innerHTML = '';
             // 按时间倒序显示最近 50 条
-            logs.slice(-50).reverse().forEach(log => {
+            logsData.slice(-50).reverse().forEach(log => {
                 const row = document.createElement('div');
                 row.className = 'log-item';
                 row.innerHTML = `
@@ -1048,96 +1200,100 @@
                 details: details,
                 timestamp: new Date().toLocaleString('zh-CN')
             };
-            logs.push(logEntry);
-            // 保持日志在一定数量内，避免过大
-            if (logs.length > 200) {
-                logs = logs.slice(-200);
+            
+            // 优先使用全局变量
+            const logsData = window.logs || logs;
+            logsData.push(logEntry);
+            
+            // 保持日志在一定数量内
+            if (logsData.length > 200) {
+                logsData = logsData.slice(-200);
             }
-            localStorage.setItem('adminLogs', JSON.stringify(logs));
-            // 同步到全局变量 (如果 window.logs 存在)
+            
+            // 更新全局变量
             if (window.logs) {
-                window.logs = logs;
+                window.logs = logsData;
             }
+            
             // 实时更新日志显示
             loadLogs();
         }
 
-        // --- 修复3: 实现流量图绘制 ---
+        // 绘制流量图 - 确保使用正确的数据源
         function drawTrafficChart() {
             const chartContainer = document.getElementById('trafficChart');
-            chartContainer.innerHTML = ''; // 清空容器
-
+            chartContainer.innerHTML = '';
+            
+            // 优先使用全局变量
+            const visitsData = window.visits || visits;
+            const dailyVisits = visitsData.daily || {};
+            
             // 获取最近7天的数据
             const dates = [];
             const values = [];
-            const dailyVisits = window.visits?.daily || visits.daily || {}; // 优先使用全局数据
-
-            // 生成最近7天的日期
+            
             for (let i = 6; i >= 0; i--) {
                 const date = new Date();
                 date.setDate(date.getDate() - i);
-                const dateStr = date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }); // 格式化为 MM/dd
+                const dateStr = date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
                 dates.push(dateStr);
-                // 从 dailyVisits 对象中获取对应日期的访问量，默认为0
-                values.push(dailyVisits[date.toISOString().split('T')[0]] || 0);
+                
+                // 获取对应日期的访问量
+                const isoDate = date.toISOString().split('T')[0];
+                values.push(dailyVisits[isoDate] || 0);
             }
-
-            const maxValue = Math.max(...values, 1); // 防止所有值为0时除以0
-
+            
+            const maxValue = Math.max(...values, 1);
+            
             // 为每一天创建柱状图元素
             dates.forEach((date, index) => {
                 const value = values[index];
-                const barHeight = (value / maxValue) * (chartContainer.clientHeight - 60); // 60px 为底部标签预留空间
-
+                const barHeight = (value / maxValue) * (chartContainer.clientHeight - 60);
+                
                 const barContainer = document.createElement('div');
                 barContainer.className = 'traffic-bar-container';
-
+                
                 const valueLabel = document.createElement('div');
                 valueLabel.className = 'traffic-bar-value';
                 valueLabel.textContent = value;
-
+                
                 const bar = document.createElement('div');
                 bar.className = 'traffic-bar';
                 bar.style.height = `${barHeight}px`;
-
+                
                 const label = document.createElement('div');
                 label.className = 'traffic-bar-label';
                 label.textContent = date;
-
+                
                 barContainer.appendChild(valueLabel);
                 barContainer.appendChild(bar);
                 barContainer.appendChild(label);
                 chartContainer.appendChild(barContainer);
             });
         }
-        // --- 结束修复3 ---
-
 
         // --- 新增：加载并显示管理员列表 (包含密码显示功能) ---
         function loadAdminList() {
             const accounts = window.adminAccounts || adminAccounts;
             const listBody = document.getElementById('adminListBody');
-            if (!listBody) return; // 安全检查
-            listBody.innerHTML = ''; // 清空现有列表
+            if (!listBody) return;
+            listBody.innerHTML = '';
 
             Object.keys(accounts).forEach(username => {
                 const row = document.createElement('tr');
-                // 创建密码显示单元格
                 const passwordCell = document.createElement('td');
-                passwordCell.className = 'password-cell'; // 添加类名以便样式控制
+                passwordCell.className = 'password-cell';
+                
                 const passwordDisplay = document.createElement('span');
                 passwordDisplay.className = 'password-display';
 
-                // 显示为星号，长度与原密码一致
-                const originalPassword = atob(accounts[username]); // Base64 解码
+                const originalPassword = atob(accounts[username]);
                 const hiddenPassword = '*'.repeat(originalPassword.length);
                 const visiblePassword = originalPassword;
 
-                // 初始状态：隐藏密码
                 passwordDisplay.innerHTML = `<span class="hidden-password">${hiddenPassword}</span><span class="visible-password hidden">${visiblePassword}</span>`;
                 passwordCell.title = '点击切换密码显示/隐藏';
-
-                // 添加点击事件监听器到密码单元格
+                
                 let isPasswordVisible = false;
                 passwordCell.addEventListener('click', () => {
                     isPasswordVisible = !isPasswordVisible;
@@ -1154,27 +1310,38 @@
 
                 passwordCell.appendChild(passwordDisplay);
 
+                // 修改操作列，添加修改密码选项
+                const actionsCell = document.createElement('td');
+                if (username !== 'admin') {
+                    actionsCell.innerHTML = `
+                        <button class="action-btn read-btn" onclick="showChangePasswordModal('${username}')">
+                            <i class="fas fa-key"></i> 修改密码
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteAdmin('${username}')">
+                            <i class="fas fa-trash"></i> 删除
+                        </button>
+                    `;
+                } else {
+                    actionsCell.innerHTML = '<span style="color: var(--gray); font-size: 0.85rem;">(主账号)</span>';
+                }
+
                 row.innerHTML = `
                     <td>${username}</td>
-                    <td></td> <!-- 空单元格，稍后填充密码 -->
-                    <td>
-                        ${username !== 'admin' ? `<button class="action-btn delete-btn" onclick="deleteAdmin('${username}')"><i class="fas fa-trash"></i> 删除</button>` : '<span style="color: var(--gray); font-size: 0.85rem;">(主账号)</span>'}
-                    </td>
+                    <td></td> <!-- 密码单元格将在这里插入 -->
                 `;
-                // 将密码单元格插入到正确的位置
                 row.children[1].appendChild(passwordCell);
+                row.appendChild(actionsCell);
                 listBody.appendChild(row);
             });
         }
         // --- 结束新增 ---
 
-
         // --- 新增：显示修改特定管理员密码的模态框 ---
-        let targetAdminForPasswordChange = null; // 全局变量，记录要修改密码的管理员用户名
+        let targetAdminForPasswordChange = null;
         function showChangePasswordModal(username) {
             targetAdminForPasswordChange = username;
             document.getElementById('changePasswordUsername').textContent = username;
-            document.getElementById('newAdminPassword').value = ''; // 清空输入框
+            document.getElementById('newAdminPassword').value = '';
             document.getElementById('changeAdminPasswordModal').style.display = 'flex';
         }
 
@@ -1203,13 +1370,11 @@
 
             // 更新内存中的密码
             const accounts = window.adminAccounts || adminAccounts;
-            accounts[targetAdminForPasswordChange] = btoa(newPassword); // Base64 编码
+            accounts[targetAdminForPasswordChange] = btoa(newPassword);
 
-            // 同步到 localStorage
-            localStorage.setItem('adminAccounts', JSON.stringify(accounts));
-            // 同步到全局变量 (如果 window.adminAccounts 存在)
+            // 更新全局变量
             if (window.adminAccounts) {
-                window.adminAccounts = accounts;
+                window.adminAccounts[targetAdminForPasswordChange] = btoa(newPassword);
             }
 
             // 记录日志
@@ -1217,36 +1382,30 @@
             alert(`管理员 "${targetAdminForPasswordChange}" 的密码已修改！`);
             document.getElementById('changeAdminPasswordModal').style.display = 'none';
 
-            // --- 关键修改：明确同步所有配置到阿里云 FC ---
-            // 准备要同步到阿里云 FC 的完整数据结构
-            const configToSync = {
+            // 同步到云端
+            syncConfigToFC({
                 pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
                 pagePasswords: window.pagePasswords || pagePasswords,
-                adminAccounts: window.adminAccounts || adminAccounts, // 同步更新后的管理员账号
-                messages: messages,
-                adminLogs: logs,
-                siteVisits: visits,
+                adminAccounts: window.adminAccounts || adminAccounts,
+                messages: window.messages || messages,
+                adminLogs: window.logs || logs,
+                siteVisits: window.visits || visits,
                 timestamp: new Date().toISOString()
-            };
-
-            // - 关键修改：调用阿里云 FC 同步函数 (使用您提供的正确地址) -
-             syncConfigToFC(configToSync).then(() => {
-                 console.log('Aliyun FC Sync: 修改管理员密码后，配置已同步');
-                 loadAdminList(); // 重新加载列表以反映变化
-             }).catch((error) => {
-                 console.error('Aliyun FC Sync: 修改管理员密码后，同步配置失败:', error);
-                 addLog('修改管理员密码', `管理员 ${currentAdminUser} 修改了 ${targetAdminForPasswordChange} 的密码 (本地修改成功，远程同步到阿里云 FC 失败: ${error.message})`);
-                 alert(`密码已修改(本地)，但同步到云端时出错: ${error.message}`);
-                 loadAdminList(); // 即使同步失败，也重新加载列表
-             });
-            // - 结束关键修改 -
+            }).then(() => {
+                console.log('Aliyun FC Sync: 修改管理员密码后，配置已同步');
+                loadAdminList();
+            }).catch((error) => {
+                console.error('Aliyun FC Sync: 修改管理员密码后，同步配置失败:', error);
+                addLog('修改管理员密码', `管理员 ${currentAdminUser} 修改了 ${targetAdminForPasswordChange} 的密码 (本地修改成功，远程同步到阿里云 FC 失败: ${error.message})`);
+                alert(`密码已修改(本地)，但同步到云端时出错: ${error.message}`);
+                loadAdminList();
+            });
         });
         // --- 结束新增 ---
 
-
         // --- 新增：删除管理员 ---
         function deleteAdmin(username) {
-            if (!isAdminLoggedIn || username === 'admin') return; // 禁止删除主账号
+            if (!isAdminLoggedIn || username === 'admin') return;
             if (!confirm(`确定要删除管理员账号 "${username}" 吗？此操作不可撤销。`)) {
                 return;
             }
@@ -1255,43 +1414,35 @@
             const accounts = window.adminAccounts || adminAccounts;
             delete accounts[username];
 
-            // 同步到 localStorage
-            localStorage.setItem('adminAccounts', JSON.stringify(accounts));
-            // 同步到全局变量 (如果 window.adminAccounts 存在)
+            // 更新全局变量
             if (window.adminAccounts) {
-                window.adminAccounts = accounts;
+                delete window.adminAccounts[username];
             }
 
             // 记录日志
             addLog('删除管理员', `管理员 ${currentAdminUser} 删除了管理员账号: ${username}`);
             alert(`管理员账号 "${username}" 已删除！`);
 
-            // --- 关键修改：明确同步所有配置到阿里云 FC ---
-            // 准备要同步到阿里云 FC 的完整数据结构
-            const configToSync = {
+            // 同步到云端
+            syncConfigToFC({
                 pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
                 pagePasswords: window.pagePasswords || pagePasswords,
                 adminAccounts: window.adminAccounts || adminAccounts,
-                messages: messages,
-                adminLogs: logs,
-                siteVisits: visits,
+                messages: window.messages || messages,
+                adminLogs: window.logs || logs,
+                siteVisits: window.visits || visits,
                 timestamp: new Date().toISOString()
-            };
-
-            // - 关键修改：调用阿里云 FC 同步函数 (使用您提供的正确地址) -
-             syncConfigToFC(configToSync).then(() => {
-                 console.log('Aliyun FC Sync: 删除管理员后，配置已同步');
-                 loadAdminList(); // 重新加载列表
-             }).catch((error) => {
-                 console.error('Aliyun FC Sync: 删除管理员后，同步配置失败:', error);
-                 addLog('删除管理员', `管理员 ${currentAdminUser} 删除了管理员账号: ${username} (本地删除成功，远程同步到阿里云 FC 失败: ${error.message})`);
-                 alert(`账号已删除(本地)，但同步到云端时出错: ${error.message}`);
-                 loadAdminList(); // 即使同步失败，也重新加载列表
-             });
-            // - 结束关键修改 -
+            }).then(() => {
+                console.log('Aliyun FC Sync: 删除管理员后，配置已同步');
+                loadAdminList();
+            }).catch((error) => {
+                console.error('Aliyun FC Sync: 删除管理员后，同步配置失败:', error);
+                addLog('删除管理员', `管理员 ${currentAdminUser} 删除了管理员账号: ${username} (本地删除成功，远程同步到阿里云 FC 失败: ${error.message})`);
+                alert(`账号已删除(本地)，但同步到云端时出错: ${error.message}`);
+                loadAdminList();
+            });
         }
         // --- 结束新增 ---
-
 
         // 修改当前登录管理员的密码
         document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
@@ -1319,44 +1470,37 @@
 
             // 更新密码
             accountsToUse[currentAdminUser] = btoa(newPassword);
-            localStorage.setItem('adminAccounts', JSON.stringify(accountsToUse));
-            // 同步到全局变量 (如果 window.adminAccounts 存在)
+            
+            // 更新全局变量
             if (window.adminAccounts) {
-                window.adminAccounts = accountsToUse;
+                window.adminAccounts[currentAdminUser] = btoa(newPassword);
             }
 
             // 记录日志
             addLog('修改密码', `管理员 ${currentAdminUser} 修改了自己的密码`);
             alert('密码修改成功！');
 
-            // --- 关键修改：明确同步所有配置到阿里云 FC ---
-            // 准备要同步到阿里云 FC 的完整数据结构
-            const configToSync = {
+            // 同步到云端
+            syncConfigToFC({
                 pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
                 pagePasswords: window.pagePasswords || pagePasswords,
-                adminAccounts: window.adminAccounts || adminAccounts, // 同步更新后的管理员账号
-                messages: messages,
-                adminLogs: logs,
-                siteVisits: visits,
+                adminAccounts: window.adminAccounts || adminAccounts,
+                messages: window.messages || messages,
+                adminLogs: window.logs || logs,
+                siteVisits: window.visits || visits,
                 timestamp: new Date().toISOString()
-            };
-
-            // - 关键修改：调用阿里云 FC 同步函数 (使用您提供的正确地址) -
-             syncConfigToFC(configToSync).then(() => {
-                 console.log('Aliyun FC Sync: 修改密码后，配置已同步');
-             }).catch((error) => {
-                 console.error('Aliyun FC Sync: 修改密码后，同步配置失败:', error);
-                 // 即使同步失败，本地设置已生效，可以记录日志
-                 addLog('修改密码', `管理员 ${currentAdminUser} 修改了自己的密码 (本地修改成功，远程同步到阿里云 FC 失败: ${error.message})`);
-                 alert(`密码已修改(本地)，但同步到云端时出错: ${error.message}`);
-             });
-            // - 结束关键修改 -
+            }).then(() => {
+                console.log('Aliyun FC Sync: 修改密码后，配置已同步');
+            }).catch((error) => {
+                console.error('Aliyun FC Sync: 修改密码后，同步配置失败:', error);
+                addLog('修改密码', `管理员 ${currentAdminUser} 修改了自己的密码 (本地修改成功，远程同步到阿里云 FC 失败: ${error.message})`);
+                alert(`密码已修改(本地)，但同步到云端时出错: ${error.message}`);
+            });
 
             // 清空表单
             oldPasswordInput.value = '';
             newPasswordInput.value = '';
         });
-
 
         // 应用页面状态设置
         function applyPageStatus(pageId) {
@@ -1373,21 +1517,21 @@
             // 更新内存中的配置
             const config = window.pageStatusConfig || pageStatusConfig;
             config[pageId] = { status, duration };
-            localStorage.setItem('pageStatusConfig', JSON.stringify(config));
-            // 同步到全局变量 (如果 window.pageStatusConfig 存在)
+            
+            // 更新全局变量
             if (window.pageStatusConfig) {
-                window.pageStatusConfig = config;
+                window.pageStatusConfig[pageId] = { status, duration };
             }
 
             // 如果是关闭状态，保存密码
             if (status === 'closed') {
                 const passwords = window.pagePasswords || pagePasswords;
                 passwords[pageId] = password;
-                localStorage.setItem('pagePasswords', JSON.stringify(passwords));
-                 // 同步到全局变量 (如果 window.pagePasswords 存在)
-                 if (window.pagePasswords) {
-                     window.pagePasswords = passwords;
-                 }
+                
+                // 更新全局变量
+                if (window.pagePasswords) {
+                    window.pagePasswords[pageId] = password;
+                }
             }
 
             // 记录日志
@@ -1395,31 +1539,23 @@
             alert(`页面 "${pageId}" 状态已更新！`);
             updateCurrentStatusDisplay(pageId);
 
-            // --- 关键修改：明确同步所有配置到阿里云 FC ---
-            // 准备要同步到阿里云 FC 的完整数据结构
-            // - 关键修改：确保包含所有必要的配置项 -
-            const configToSync = {
-                pageStatusConfig: window.pageStatusConfig || pageStatusConfig, // 优先使用全局
-                pagePasswords: window.pagePasswords || pagePasswords, // 优先使用全局
-                adminAccounts: window.adminAccounts || adminAccounts, // 同步管理员账号
-                messages: messages,
-                adminLogs: logs,
-                siteVisits: visits,
+            // 同步到云端
+            syncConfigToFC({
+                pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
+                pagePasswords: window.pagePasswords || pagePasswords,
+                adminAccounts: window.adminAccounts || adminAccounts,
+                messages: window.messages || messages,
+                adminLogs: window.logs || logs,
+                siteVisits: window.visits || visits,
                 timestamp: new Date().toISOString()
-            };
-            // - 结束关键修改 -
-
-            // - 关键修改：调用阿里云 FC 同步函数 (使用您提供的正确地址) -
-             syncConfigToFC(configToSync).then(() => {
-                 console.log('Aliyun FC Sync: 配置已同步');
-                 alert(`页面 "${pageId}" 状态已更新并同步到云端！`);
-             }).catch((error) => {
-                 console.error('Aliyun FC Sync: 同步配置失败:', error);
-                 // 即使同步失败，本地设置已生效，可以提示用户
-                 addLog('修改页面状态', `将页面 "${pageId}" 的状态修改为: ${status} (本地修改成功，远程同步到阿里云 FC 失败: ${error.message})`);
-                 alert(`页面 "${pageId}" 状态已更新(本地)，但同步到云端时出错: ${error.message}`);
-             });
-            // - 结束关键修改 -
+            }).then(() => {
+                console.log('Aliyun FC Sync: 配置已同步');
+                alert(`页面 "${pageId}" 状态已更新并同步到云端！`);
+            }).catch((error) => {
+                console.error('Aliyun FC Sync: 同步配置失败:', error);
+                addLog('修改页面状态', `将页面 "${pageId}" 的状态修改为: ${status} (本地修改成功，远程同步到阿里云 FC 失败: ${error.message})`);
+                alert(`页面 "${pageId}" 状态已更新(本地)，但同步到云端时出错: ${error.message}`);
+            });
         }
 
         // 更新当前状态显示
@@ -1439,18 +1575,17 @@
 
         // --- 新增：创建新管理员账号 ---
         document.getElementById('addAdminForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // 阻止表单默认提交刷新页面
+            e.preventDefault();
             if (!isAdminLoggedIn) {
                 alert('请先登录！');
                 return;
             }
 
-            // - 新增：权限检查 -
+            // 权限检查
             if (currentAdminUser !== 'admin') {
                 alert('只有主管理员 (admin) 可以创建新管理员账号！');
                 return;
             }
-            // - 结束新增 -
 
             const newUsername = document.getElementById('newAdminUsername').value.trim();
             if (!newUsername) {
@@ -1458,7 +1593,7 @@
                 return;
             }
 
-            // 修复：检查全局变量 window.adminAccounts
+            // 检查全局变量
             const currentAdminAccounts = window.adminAccounts || adminAccounts;
             if (currentAdminAccounts[newUsername]) {
                 alert('该管理员账号已存在！');
@@ -1467,62 +1602,48 @@
 
             // 添加新账号，默认密码 '123456'
             const defaultPassword = '123456';
-            // 修复：更新全局变量和 localStorage
+            
+            // 更新全局变量
             if (window.adminAccounts) {
-                window.adminAccounts[newUsername] = btoa(defaultPassword); // 更新全局变量
+                window.adminAccounts[newUsername] = btoa(defaultPassword);
             }
-            adminAccounts[newUsername] = btoa(defaultPassword); // 更新局部变量（保险）
-            localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts)); // 保存到 localStorage
-
+            
+            // 更新局部变量
+            adminAccounts[newUsername] = btoa(defaultPassword);
+            
             // 记录日志
             addLog('新增管理员', `管理员 ${currentAdminUser} 新增了管理员账号: ${newUsername} (默认密码: ${defaultPassword})`);
 
-            // --- 关键修改：明确同步所有配置到阿里云 FC ---
-            // 准备要同步到阿里云 FC 的完整数据结构
-            const configToSync = {
-                pageStatusConfig: window.pageStatusConfig || pageStatusConfig, // 优先使用全局
-                pagePasswords: window.pagePasswords || pagePasswords, // 优先使用全局
-                adminAccounts: window.adminAccounts || adminAccounts, // 优先使用全局（包含新账号）
-                messages: messages,
-                adminLogs: logs,
-                siteVisits: visits,
+            // 同步到云端
+            syncConfigToFC({
+                pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
+                pagePasswords: window.pagePasswords || pagePasswords,
+                adminAccounts: window.adminAccounts || adminAccounts,
+                messages: window.messages || messages,
+                adminLogs: window.logs || logs,
+                siteVisits: window.visits || visits,
                 timestamp: new Date().toISOString()
-            };
-
-            // - 关键修改：调用阿里云 FC 同步函数 (使用您提供的正确地址) -
-             syncConfigToFC(configToSync).then(() => {
-                 console.log('Aliyun FC Sync: 新增管理员后，配置已同步');
-                 // 清空表单
-                 document.getElementById('addAdminForm').reset();
-                 alert(`管理员账号 "${newUsername}" 创建成功并已同步！默认密码为 '${defaultPassword}'，请及时修改。`);
-                 // - 新增：重新加载管理员列表 -
-                 loadAdminList();
-                 // - 结束新增 -
-             }).catch((error) => {
-                 console.error('Aliyun FC Sync: 新增管理员后，同步配置失败:', error);
-                 // 即使同步失败，本地设置已生效，可以提示用户
-                 addLog('新增管理员', `管理员 ${currentAdminUser} 新增了管理员账号: ${newUsername} (本地添加成功，远程同步到阿里云 FC 失败: ${error.message})`);
-                 // 清空表单
-                 document.getElementById('addAdminForm').reset();
-                 alert(`管理员账号 "${newUsername}" 已创建(本地)，但同步到云端时出错: ${error.message}。请稍后手动同步或检查网络。`);
-                 // - 新增：即使同步失败，也重新加载管理员列表 -
-                 loadAdminList();
-                 // - 结束新增 -
-             });
-            // - 结束关键修改 -
+            }).then(() => {
+                console.log('Aliyun FC Sync: 新增管理员后，配置已同步');
+                document.getElementById('addAdminForm').reset();
+                alert(`管理员账号 "${newUsername}" 创建成功并已同步！默认密码为 '${defaultPassword}'，请及时修改。`);
+                loadAdminList();
+            }).catch((error) => {
+                console.error('Aliyun FC Sync: 新增管理员后，同步配置失败:', error);
+                addLog('新增管理员', `管理员 ${currentAdminUser} 新增了管理员账号: ${newUsername} (本地添加成功，远程同步到阿里云 FC 失败: ${error.message})`);
+                document.getElementById('addAdminForm').reset();
+                alert(`管理员账号 "${newUsername}" 已创建(本地)，但同步到云端时出错: ${error.message}。请稍后手动同步或检查网络。`);
+                loadAdminList();
+            });
         });
         // --- 结束新增 ---
 
-
         // --- 新增：阿里云 FC 同步函数 ---
-        // 你需要将这个函数中的 YOUR_FC_ENDPOINT 替换为实际调用阿里云函数计算服务的 URL
-        // 关键：使用您提供的正确 FC 端点地址
         async function syncConfigToFC(configData) {
-            // 模拟一个异步操作，比如网络请求
             console.log("Aliyun FC Sync: 开始同步配置到云端...", configData);
-            // --- 关键修改：使用您提供的正确 FC 端点地址 ---
+            // 使用您提供的正确 FC 端点地址
             const FC_ENDPOINT = 'https://updatewteconfig-aquxgazwhl.cn-hangzhou.fcapp.run/';
-            // --- 结束关键修改 ---
+            
             try {
                 const response = await fetch(FC_ENDPOINT, {
                     method: 'POST',
@@ -1548,14 +1669,13 @@
         }
         // --- 结束新增 ---
 
-
         // --- 默认配置 (如果 OSS 加载失败或首次使用) ---
         const pageStatusConfig = {
             products: { status: 'open', duration: 10 },
             about: { status: 'open', duration: 10 },
             contact: { status: 'open', duration: 10 }
         };
-        const pagePasswords = {}; // 关闭密码默认为空
+        const pagePasswords = {};
         // --- 结束默认配置 ---
     </script>
 </body>
