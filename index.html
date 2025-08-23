@@ -176,6 +176,17 @@
             outline: none;
             box-shadow: 0 0 0 2px rgba(228, 57, 60, 0.2);
         }
+        /* 新增：自定义选择框样式 */
+        .custom-select {
+            -webkit-appearance: none; /* 移除浏览器默认样式 */
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20 viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M7.41%208.59L12%2013.17l4.59-4.58L18%2010l-6%206-6-6z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 30px; /* 为箭头留出空间 */
+            cursor: pointer;
+        }
         .btn {
             padding: 12px 25px;
             background-color: var(--primary);
@@ -190,6 +201,22 @@
         }
         .btn:hover {
             background-color: #d32f2f;
+        }
+        /* 新增：按钮轮廓样式 */
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .btn-outline:hover {
+            background-color: rgba(228, 57, 60, 0.1);
         }
         /* 管理员面板 */
         #adminPanel {
@@ -407,6 +434,8 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: var(--shadow);
+            max-height: 400px; /* 限制最大高度 */
+            overflow-y: auto; /* 启用垂直滚动 */
         }
         .log-item {
             padding: 10px 15px;
@@ -792,7 +821,10 @@
                     <form id="addAdminForm" class="add-admin-form">
                         <h4>创建新管理员账号</h4>
                         <div class="form-row">
-                            <input type="text" id="newAdminUsername" placeholder="输入新管理员用户名" required>
+                            <div class="form-group">
+                                <label for="newAdminUsername">用户名</label>
+                                <input type="text" id="newAdminUsername" placeholder="输入新管理员用户名" required>
+                            </div>
                             <button type="submit" class="btn"><i class="fas fa-plus"></i> 新增</button>
                         </div>
                         <p style="font-size: 0.9rem; color: var(--gray); margin-top: 10px;">
@@ -821,8 +853,14 @@
                     <h3><i class="fas fa-key"></i> 修改密码</h3>
                     <form id="changePasswordForm" class="add-admin-form">
                         <div class="form-row">
-                            <input type="password" id="oldPassword" placeholder="旧密码" required>
-                            <input type="password" id="newPassword" placeholder="新密码 (至少6位)" required>
+                            <div class="form-group">
+                                <label for="oldPassword">旧密码</label>
+                                <input type="password" id="oldPassword" placeholder="旧密码" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">新密码</label>
+                                <input type="password" id="newPassword" placeholder="新密码 (至少6位)" required>
+                            </div>
                             <button type="submit" class="btn"><i class="fas fa-save"></i> 保存</button>
                         </div>
                     </form>
@@ -831,12 +869,17 @@
                 <div class="settings-section message-management">
                     <h3><i class="fas fa-comments"></i> 留言管理</h3>
                     <div class="search-box">
-                        <select id="messageStatusFilter" onchange="filterMessages()">
-                            <option value="all">全部状态</option>
-                            <option value="unread">未读</option>
-                            <option value="read">已读</option>
-                        </select>
-                        <input type="text" id="messageSearch" placeholder="搜索留言...">
+                        <div class="form-group">
+                            <label for="messageStatusFilter">状态</label>
+                            <select id="messageStatusFilter" onchange="filterMessages()" class="custom-select">
+                                <option value="all">全部状态</option>
+                                <option value="unread">未读</option>
+                                <option value="read">已读</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="messageSearch" placeholder="搜索留言...">
+                        </div>
                         <button class="btn" onclick="filterMessages()"><i class="fas fa-search"></i> 搜索</button>
                     </div>
                     <table class="message-table" id="messagesTable">
@@ -854,17 +897,30 @@
                             <!-- 留言列表将通过 JavaScript 动态加载 -->
                         </tbody>
                     </table>
+                    <!-- 留言分页 -->
+                    <div class="pagination">
+                        <div class="page-info">
+                            第 <span id="currentPageNum">1</span> 页，共 <span id="totalPagesNum">1</span> 页
+                        </div>
+                        <div class="page-nav">
+                            <button id="prevPageBtn" class="btn btn-sm" disabled><i class="fas fa-chevron-left"></i></button>
+                            <button id="nextPageBtn" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
                 </div>
                 <!-- 系统日志 -->
                 <div class="settings-section">
                     <h3><i class="fas fa-history"></i> 系统日志</h3>
                     <div class="search-box">
-                        <select id="logTimeFilter" onchange="loadLogs()">
-                            <option value="all">全部时间</option>
-                            <option value="today">今天</option>
-                            <option value="week">本周</option>
-                            <option value="month">本月</option>
-                        </select>
+                        <div class="form-group">
+                            <label for="logTimeFilter">时间范围</label>
+                            <select id="logTimeFilter" onchange="loadLogs()" class="custom-select">
+                                <option value="all">全部时间</option>
+                                <option value="today">今天</option>
+                                <option value="week">本周</option>
+                                <option value="month">本月</option>
+                            </select>
+                        </div>
                         <button class="btn" onclick="loadLogs()"><i class="fas fa-sync-alt"></i> 刷新</button>
                     </div>
                     <div class="logs-container" id="logsContainer">
@@ -1123,20 +1179,28 @@
         // 退出登录功能
         document.getElementById('logoutLink').addEventListener('click', function(e) {
             e.preventDefault();
-            if (confirm('确定要退出登录吗？')) {
-                // 清除登录状态
-                isAdminLoggedIn = false;
-                currentAdminUser = null;
-                // 隐藏面板，显示登录界面
-                document.getElementById('adminPanel').style.display = 'none';
-                document.getElementById('loginSection').style.display = 'block';
-                // 清空表单
-                document.getElementById('adminLogin').reset();
-                // 清除日志显示
-                document.getElementById('logsContainer').innerHTML = '';
-                // 重新加载页面以刷新所有数据
-                location.reload();
-            }
+            showConfirmModal(
+                '确认退出',
+                '确定要退出登录吗？',
+                function() {
+                    // 清除登录状态
+                    isAdminLoggedIn = false;
+                    currentAdminUser = null;
+                    // 隐藏面板，显示登录界面
+                    document.getElementById('adminPanel').style.display = 'none';
+                    document.getElementById('loginSection').style.display = 'block';
+                    // 清空表单
+                    document.getElementById('adminLogin').reset();
+                    // 清除日志显示
+                    document.getElementById('logsContainer').innerHTML = '';
+                    // 重新加载页面以刷新所有数据
+                    location.reload();
+                },
+                function() {
+                    // 用户取消退出
+                    showSuccessModal('已取消退出操作。');
+                }
+            );
         });
         // 更新统计信息
         function updateStats() {
@@ -1282,8 +1346,6 @@
             if (window.adminAccounts) {
                 window.adminAccounts[newUsername] = btoa(defaultPassword);
             }
-            // 更新局部变量
-            adminAccounts[newUsername] = btoa(defaultPassword);
             // 记录日志
             addLog('新增管理员', `管理员 ${currentAdminUser} 新增了管理员账号: ${newUsername} (默认密码: ${defaultPassword})`);
             // 同步到云端
@@ -1513,13 +1575,32 @@
                 newPasswordInput.value = '';
             });
         });
-        // 加载并显示留言列表 - 修复：最新的在上
+        // --- 修改：加载并显示留言列表 - 增加分页 ---
         function loadMessages() {
             const messagesData = window.messages || messages;
             const messagesBody = document.getElementById('messagesBody');
             if (!messagesBody) return;
+
+            // --- 分页逻辑 ---
+            const pageSize = 5; // 每页显示5条
+            let currentPage = parseInt(localStorage.getItem('messagesCurrentPage') || '1');
+            const totalPages = Math.ceil(messagesData.length / pageSize);
+
+            // 确保页码在有效范围内
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            // 更新本地存储
+            localStorage.setItem('messagesCurrentPage', currentPage.toString());
+
+            // 更新分页控件
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+            document.getElementById('currentPageNum').textContent = currentPage;
+            document.getElementById('totalPagesNum').textContent = totalPages;
+
+            // --- 过滤和排序 ---
             messagesBody.innerHTML = '';
-            // 修复：最新的在上
             const sortedMessages = [...messagesData].reverse();
             const filterValue = document.getElementById('messageStatusFilter').value;
             let filteredMessages = sortedMessages;
@@ -1528,7 +1609,14 @@
             } else if (filterValue === 'read') {
                 filteredMessages = sortedMessages.filter(msg => msg.read);
             }
-            filteredMessages.forEach((message, index) => {
+
+            // --- 分页计算 ---
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageMessages = filteredMessages.slice(startIndex, endIndex);
+
+            // --- 渲染当前页 ---
+            pageMessages.forEach((message, index) => {
                 const row = document.createElement('tr');
                 const statusClass = message.read ? 'status-read' : 'status-unread';
                 const statusText = message.read ? '已读' : '未读';
@@ -1639,6 +1727,8 @@
                 const row = document.createElement('tr');
                 const statusClass = message.read ? 'status-read' : 'status-unread';
                 const statusText = message.read ? '已读' : '未读';
+                // --- 关键修改：使用原始数组的索引 ---
+                const originalIndex = sortedMessages.indexOf(message);
                 row.innerHTML = `
                     <td>${message.name}</td>
                     <td>${message.phone}</td>
@@ -1646,14 +1736,14 @@
                     <td>${message.timestamp}</td>
                     <td><span class="read-status ${statusClass}">${statusText}</span></td>
                     <td>
-                        <button class="action-btn" onclick="markAsRead(${index})">标为已读</button>
-                        <button class="action-btn delete-btn" onclick="deleteMessage(${index})">删除</button>
+                        <button class="action-btn" onclick="markAsRead(${originalIndex})">标为已读</button>
+                        <button class="action-btn delete-btn" onclick="deleteMessage(${originalIndex})">删除</button>
                     </td>
                 `;
                 messagesBody.appendChild(row);
             });
         }
-        // 加载并显示系统日志 - 修复：时间筛选和错误处理
+        // --- 修改：加载并显示系统日志 - 修复时间筛选和错误处理 ---
         function loadLogs() {
             const logsData = window.logs || logs;
             const logsContainer = document.getElementById('logsContainer');
@@ -1690,9 +1780,13 @@
             filteredLogs.slice().reverse().forEach(log => {
                 const logItem = document.createElement('div');
                 logItem.className = 'log-item';
+                // --- 修复：增加时间有效性检查 ---
+                const timeDisplay = log.time ? new Date(log.time) : new Date();
+                const validTime = isNaN(timeDisplay.getTime()) ? '未知时间' : timeDisplay.toLocaleString();
+                // --- 结束修复 ---
                 logItem.innerHTML = `
                     <div>
-                        <div class="log-time">${log.time}</div>
+                        <div class="log-time">${validTime}</div>
                         <div class="log-action">${log.action}</div>
                     </div>
                     <div class="log-details">${log.details}</div>
@@ -1927,6 +2021,23 @@
         // 关闭修改密码模态框
         document.getElementById('closeChangePasswordModal').addEventListener('click', function() {
             document.getElementById('changeAdminPasswordModal').style.display = 'none';
+        });
+        // --- 新增：分页按钮事件 ---
+        document.getElementById('prevPageBtn').addEventListener('click', function() {
+            const currentPage = parseInt(localStorage.getItem('messagesCurrentPage') || '1');
+            if (currentPage > 1) {
+                localStorage.setItem('messagesCurrentPage', (currentPage - 1).toString());
+                loadMessages();
+            }
+        });
+
+        document.getElementById('nextPageBtn').addEventListener('click', function() {
+            const currentPage = parseInt(localStorage.getItem('messagesCurrentPage') || '1');
+            const totalPages = Math.ceil((window.messages || messages).length / 5);
+            if (currentPage < totalPages) {
+                localStorage.setItem('messagesCurrentPage', (currentPage + 1).toString());
+                loadMessages();
+            }
         });
     </script>
 </body>
