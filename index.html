@@ -1192,18 +1192,20 @@
             const unreadCount = messagesData.filter(msg => !msg.read).length;
             document.getElementById('unreadMessages').textContent = unreadCount;
         }
-        // 初始化设置面板 UI
+        // 初始化设置面板 UI - 修复版本
         function initializeSettingsPanel() {
             console.log("🔧 开始初始化设置面板 UI...");
             // 修复：优先使用从 OSS 加载的全局配置
             const config = window.pageStatusConfig || pageStatusConfig;
             const passwords = window.pagePasswords || pagePasswords;
+            
             // 设置页面状态
             const pageSettings = [
                 { id: 'products', config: config.products, passwords: passwords },
                 { id: 'about', config: config.about, passwords: passwords },
                 { id: 'contact', config: config.contact, passwords: passwords }
             ];
+            
             pageSettings.forEach(setting => {
                 const { id, config: pageConfig, passwords: pagePasswords } = setting;
                 if (pageConfig) {
@@ -1211,16 +1213,26 @@
                     const durationInput = document.getElementById(`${id}Duration`);
                     const passwordInput = document.getElementById(`${id}Password`);
                     const statusElement = document.getElementById(`${id}CurrentStatus`);
-                    statusSelect.value = pageConfig.status;
-                    durationInput.value = pageConfig.duration || '';
-                    passwordInput.value = pagePasswords[id] || '';
-                    let statusText = pageConfig.status;
-                    if (pageConfig.status === 'limit') {
-                        statusText += ` (${pageConfig.duration || 10}秒)`;
+                    
+                    // 添加安全检查：确保元素存在
+                    if (statusSelect) {
+                        statusSelect.value = pageConfig.status;
                     }
-                    statusElement.textContent = statusText;
-                    statusElement.style.color = pageConfig.status === 'open' ? 'green' :
-                                              (pageConfig.status === 'limit' ? 'orange' : 'red');
+                    if (durationInput) {
+                        durationInput.value = pageConfig.duration || '';
+                    }
+                    if (passwordInput) {
+                        passwordInput.value = pagePasswords[id] || '';
+                    }
+                    if (statusElement) {
+                        let statusText = pageConfig.status;
+                        if (pageConfig.status === 'limit') {
+                            statusText += ` (${pageConfig.duration || 10}秒)`;
+                        }
+                        statusElement.textContent = statusText;
+                        statusElement.style.color = pageConfig.status === 'open' ? 'green' :
+                                                  (pageConfig.status === 'limit' ? 'orange' : 'red');
+                    }
                     // 调用切换输入框函数
                     if (id === 'products') toggleProductInputs();
                     if (id === 'about') toggleAboutInputs();
@@ -1236,9 +1248,9 @@
             const statusSelect = document.getElementById(`${pageId}Status`);
             const durationInput = document.getElementById(`${pageId}Duration`);
             const passwordInput = document.getElementById(`${pageId}Password`);
-            const status = statusSelect.value;
-            const duration = durationInput.value ? parseInt(durationInput.value) : 10;
-            const password = passwordInput.value;
+            const status = statusSelect ? statusSelect.value : 'open';
+            const duration = durationInput ? (durationInput.value ? parseInt(durationInput.value) : 10) : 10;
+            const password = passwordInput ? passwordInput.value : '';
             // 更新配置
             config[pageId] = { status, duration };
             passwords[pageId] = password;
@@ -1251,9 +1263,11 @@
             if (status === 'limit') {
                 statusText += ` (${duration}秒)`;
             }
-            statusElement.textContent = statusText;
-            statusElement.style.color = status === 'open' ? 'green' :
-                                      (status === 'limit' ? 'orange' : 'red');
+            if (statusElement) {
+                statusElement.textContent = statusText;
+                statusElement.style.color = status === 'open' ? 'green' :
+                                          (status === 'limit' ? 'orange' : 'red');
+            }
             // 同步到云端
             showLoadingModal('正在同步配置到云端...');
             syncConfigToFC({
@@ -1276,8 +1290,9 @@
         }
         // 新增：切换产品状态相关输入框
         function toggleProductInputs() {
-            const status = document.getElementById('productsStatus').value;
+            const status = document.getElementById('productsStatus')?.value;
             const container = document.getElementById('productsConditionalInputs');
+            if (!container) return;
             container.innerHTML = '';
 
             if (status === 'limit') {
@@ -1299,8 +1314,9 @@
 
         // 新增：切换关于状态相关输入框
         function toggleAboutInputs() {
-            const status = document.getElementById('aboutStatus').value;
+            const status = document.getElementById('aboutStatus')?.value;
             const container = document.getElementById('aboutConditionalInputs');
+            if (!container) return;
             container.innerHTML = '';
 
             if (status === 'limit') {
@@ -1322,8 +1338,9 @@
 
         // 新增：切换联系方式状态相关输入框
         function toggleContactInputs() {
-            const status = document.getElementById('contactStatus').value;
+            const status = document.getElementById('contactStatus')?.value;
             const container = document.getElementById('contactConditionalInputs');
+            if (!container) return;
             container.innerHTML = '';
 
             if (status === 'limit') {
@@ -1730,26 +1747,6 @@
                     </td>
                 `;
                 messagesBody.appendChild(row);
-            });
-        }
-        // 加载并显示系统日志
-        function loadLogs() {
-            const logsData = window.logs || logs;
-            const logsContainer = document.getElementById('logsContainer');
-            if (!logsContainer) return;
-            logsContainer.innerHTML = '';
-            // 反向显示（最新的在上面）
-            logsData.slice().reverse().forEach(log => {
-                const logItem = document.createElement('div');
-                logItem.className = 'log-item';
-                logItem.innerHTML = `
-                    <div>
-                        <div class="log-time">${log.time}</div>
-                        <div class="log-action">${log.action}</div>
-                    </div>
-                    <div class="log-details">${log.details}</div>
-                `;
-                logsContainer.appendChild(logItem);
             });
         }
         // 新增：筛选日志
