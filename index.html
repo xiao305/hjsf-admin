@@ -100,15 +100,6 @@
         .nav-links a.active::after {
             width: 100%;
         }
-        /* 通用表单控件样式 */
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: inherit;
-        }
         /* 内容容器 */
         .container {
             max-width: 1200px;
@@ -168,6 +159,13 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
         }
         .btn {
             padding: 12px 25px;
@@ -280,8 +278,6 @@
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            font-size: 1rem;
-            font-family: inherit;
         }
         .setting-row button {
             padding: 10px 15px;
@@ -314,26 +310,23 @@
         }
         .password-cell {
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 5px;
         }
         .password-display {
+            display: inline-block;
+            width: 100px;
             background: #f0f0f0;
             padding: 5px;
             border-radius: 4px;
             font-family: monospace;
-            width: 100px;
         }
         .toggle-password {
+            margin-left: 5px;
             cursor: pointer;
             color: var(--primary);
         }
         .action-buttons {
             display: flex;
-            flex-direction: column;
-            gap: 5px;
+            gap: 10px;
         }
         .action-btn {
             padding: 6px 12px;
@@ -405,8 +398,6 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: var(--shadow);
-            max-height: 300px;
-            overflow-y: auto;
         }
         .log-item {
             padding: 10px 15px;
@@ -651,7 +642,6 @@
             <div class="nav-links">
                 <a href="https://hjsf.uno" class="nav-link"><i class="fas fa-home"></i> 返回首页</a>
                 <a href="#" class="nav-link active" data-page="admin"><i class="fas fa-lock"></i> 管理员</a>
-                <a href="#" id="logoutLink" class="nav-link"><i class="fas fa-sign-out-alt"></i> 退出登录</a> <!-- 新增退出登录 -->
             </div>
         </div>
     </nav>
@@ -667,11 +657,11 @@
             <form id="adminLogin">
                 <div class="form-group">
                     <label for="username"><i class="fas fa-user"></i> 用户名</label>
-                    <input type="text" id="username" class="form-control" required>
+                    <input type="text" id="username" required>
                 </div>
                 <div class="form-group">
                     <label for="password"><i class="fas fa-lock"></i> 密码</label>
-                    <input type="password" id="password" class="form-control" required>
+                    <input type="password" id="password" required>
                 </div>
                 <button type="submit" class="btn"><i class="fas fa-sign-in-alt"></i> 登录</button>
             </form>
@@ -706,19 +696,13 @@
                         <h4><i class="fas fa-shopping-bag"></i> 特产商城</h4>
                         <div class="setting-row">
                             <label>状态:</label>
-                            <select id="productsStatus" class="form-control">
+                            <select id="productsStatus">
                                 <option value="open">开启</option>
                                 <option value="limit">限制访问</option>
                                 <option value="closed">关闭</option>
                             </select>
-                            <div id="productsDurationContainer" class="setting-row-container">
-                                <label>秒数:</label>
-                                <input type="number" id="productsDuration" class="form-control" placeholder="限制秒数" min="1">
-                            </div>
-                            <div id="productsPasswordContainer" class="setting-row-container">
-                                <label>密码:</label>
-                                <input type="text" id="productsPassword" class="form-control" placeholder="关闭密码">
-                            </div>
+                            <input type="number" id="productsDuration" placeholder="限制秒数" min="1">
+                            <input type="text" id="productsPassword" placeholder="关闭密码">
                             <button class="btn" onclick="applyPageStatus('products')"><i class="fas fa-save"></i> 应用</button>
                         </div>
                         <div class="current-status">当前状态: <span id="productsCurrentStatus">未知</span></div>
@@ -728,19 +712,13 @@
                         <h4><i class="fas fa-info-circle"></i> 关于我们</h4>
                         <div class="setting-row">
                             <label>状态:</label>
-                            <select id="aboutStatus" class="form-control">
+                            <select id="aboutStatus">
                                 <option value="open">开启</option>
                                 <option value="limit">限制访问</option>
                                 <option value="closed">关闭</option>
                             </select>
-                            <div id="aboutDurationContainer" class="setting-row-container">
-                                <label>秒数:</label>
-                                <input type="number" id="aboutDuration" class="form-control" placeholder="限制秒数" min="1">
-                            </div>
-                            <div id="aboutPasswordContainer" class="setting-row-container">
-                                <label>密码:</label>
-                                <input type="text" id="aboutPassword" class="form-control" placeholder="关闭密码">
-                            </div>
+                            <input type="number" id="aboutDuration" placeholder="限制秒数" min="1">
+                            <input type="text" id="aboutPassword" placeholder="关闭密码">
                             <button class="btn" onclick="applyPageStatus('about')"><i class="fas fa-save"></i> 应用</button>
                         </div>
                         <div class="current-status">当前状态: <span id="aboutCurrentStatus">未知</span></div>
@@ -750,19 +728,13 @@
                         <h4><i class="fas fa-phone-alt"></i> 联系方式</h4>
                         <div class="setting-row">
                             <label>状态:</label>
-                            <select id="contactStatus" class="form-control">
+                            <select id="contactStatus">
                                 <option value="open">开启</option>
                                 <option value="limit">限制访问</option>
                                 <option value="closed">关闭</option>
                             </select>
-                            <div id="contactDurationContainer" class="setting-row-container">
-                                <label>秒数:</label>
-                                <input type="number" id="contactDuration" class="form-control" placeholder="限制秒数" min="1">
-                            </div>
-                            <div id="contactPasswordContainer" class="setting-row-container">
-                                <label>密码:</label>
-                                <input type="text" id="contactPassword" class="form-control" placeholder="关闭密码">
-                            </div>
+                            <input type="number" id="contactDuration" placeholder="限制秒数" min="1">
+                            <input type="text" id="contactPassword" placeholder="关闭密码">
                             <button class="btn" onclick="applyPageStatus('contact')"><i class="fas fa-save"></i> 应用</button>
                         </div>
                         <div class="current-status">当前状态: <span id="contactCurrentStatus">未知</span></div>
@@ -775,7 +747,7 @@
                     <form id="addAdminForm" class="add-admin-form">
                         <h4>创建新管理员账号</h4>
                         <div class="form-row">
-                            <input type="text" id="newAdminUsername" class="form-control" placeholder="输入新管理员用户名" required>
+                            <input type="text" id="newAdminUsername" placeholder="输入新管理员用户名" required>
                             <button type="submit" class="btn"><i class="fas fa-plus"></i> 新增</button>
                         </div>
                         <p style="font-size: 0.9rem; color: var(--gray); margin-top: 10px;">
@@ -803,9 +775,9 @@
                 <div class="settings-section">
                     <h3><i class="fas fa-key"></i> 修改密码</h3>
                     <form id="changePasswordForm" class="add-admin-form">
-                        <div class="form-row" style="align-items: center; gap: 10px;">
-                            <input type="password" id="oldPassword" class="form-control" placeholder="旧密码" required>
-                            <input type="password" id="newPassword" class="form-control" placeholder="新密码 (至少6位)" required>
+                        <div class="form-row">
+                            <input type="password" id="oldPassword" placeholder="旧密码" required>
+                            <input type="password" id="newPassword" placeholder="新密码 (至少6位)" required>
                             <button type="submit" class="btn"><i class="fas fa-save"></i> 保存</button>
                         </div>
                     </form>
@@ -814,45 +786,28 @@
                 <div class="settings-section message-management">
                     <h3><i class="fas fa-comments"></i> 留言管理</h3>
                     <div class="search-box">
-                        <select id="messageStatusFilter" class="form-control" onchange="filterMessagesByStatus()">
-                            <option value="">全部状态</option>
-                            <option value="unread">未读</option>
-                            <option value="read">已读</option>
-                        </select>
-                        <input type="text" id="messageSearch" class="form-control" placeholder="搜索留言...">
+                        <input type="text" id="messageSearch" placeholder="搜索留言...">
                         <button class="btn" onclick="filterMessages()"><i class="fas fa-search"></i> 搜索</button>
                     </div>
-                    <div style="max-height: 400px; overflow-y: auto;">
-                        <table class="message-table" id="messagesTable">
-                            <thead>
-                                <tr>
-                                    <th>姓名</th>
-                                    <th>电话</th>
-                                    <th>留言内容</th>
-                                    <th>时间</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="messagesBody">
-                                <!-- 留言列表将通过 JavaScript 动态加载 -->
-                            </tbody>
-                        </table>
-                    </div>
+                    <table class="message-table" id="messagesTable">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>电话</th>
+                                <th>留言内容</th>
+                                <th>时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="messagesBody">
+                            <!-- 留言列表将通过 JavaScript 动态加载 -->
+                        </tbody>
+                    </table>
                 </div>
                 <!-- 系统日志 -->
                 <div class="settings-section">
                     <h3><i class="fas fa-history"></i> 系统日志</h3>
-                    <select id="logActionFilter" class="form-control" onchange="filterLogs()">
-                        <option value="">全部操作</option>
-                        <option value="管理员登录">管理员登录</option>
-                        <option value="新增管理员">新增管理员</option>
-                        <option value="修改管理员密码">修改管理员密码</option>
-                        <option value="删除管理员">删除管理员</option>
-                        <option value="修改密码">修改密码</option>
-                        <option value="标为已读">标为已读</option>
-                        <option value="删除留言">删除留言</option>
-                    </select>
                     <div class="logs-container" id="logsContainer">
                         <!-- 日志列表将通过 JavaScript 动态加载 -->
                     </div>
@@ -879,7 +834,7 @@
                 <form id="changeAdminPasswordForm">
                     <div class="form-group">
                         <label for="newAdminPassword">新密码:</label>
-                        <input type="password" id="newAdminPassword" class="form-control" required>
+                        <input type="password" id="newAdminPassword" required>
                     </div>
                     <button type="submit" class="btn"><i class="fas fa-save"></i> 保存</button>
                 </form>
@@ -1154,40 +1109,11 @@
                         statusText += ` (${pageConfig.duration || 10}秒)`;
                     }
                     statusElement.textContent = statusText;
-                    statusElement.style.color = pageConfig.status === 'open' ? 'green' :
+                    statusElement.style.color = pageConfig.status === 'open' ? 'green' : 
                                               (pageConfig.status === 'limit' ? 'orange' : 'red');
-
-                    // 初始化状态显示
-                    updatePageStatusVisibility(id, pageConfig.status);
-                    // 添加状态变更监听器
-                    statusSelect.addEventListener('change', function() {
-                        const newStatus = this.value;
-                        updatePageStatusVisibility(id, newStatus);
-                        // 保存状态
-                        applyPageStatus(id);
-                    });
                 }
             });
         }
-
-        // 根据状态更新显示
-        function updatePageStatusVisibility(pageId, status) {
-            const durationContainer = document.getElementById(`${pageId}DurationContainer`);
-            const passwordContainer = document.getElementById(`${pageId}PasswordContainer`);
-            if (durationContainer && passwordContainer) {
-                if (status === 'limit') {
-                    durationContainer.style.display = 'flex';
-                    passwordContainer.style.display = 'none';
-                } else if (status === 'closed') {
-                    durationContainer.style.display = 'none';
-                    passwordContainer.style.display = 'flex';
-                } else {
-                    durationContainer.style.display = 'none';
-                    passwordContainer.style.display = 'none';
-                }
-            }
-        }
-
         // 应用页面状态设置
         function applyPageStatus(pageId) {
             // 修复：优先使用全局变量
@@ -1212,7 +1138,7 @@
                 statusText += ` (${duration}秒)`;
             }
             statusElement.textContent = statusText;
-            statusElement.style.color = status === 'open' ? 'green' :
+            statusElement.style.color = status === 'open' ? 'green' : 
                                       (status === 'limit' ? 'orange' : 'red');
             // 同步到云端
             showLoadingModal('正在同步配置到云端...');
@@ -1319,9 +1245,7 @@
                 });
                 passwordCell.appendChild(passwordDisplay);
                 passwordCell.appendChild(toggleBtn);
-
                 const actionsCell = document.createElement('td');
-                actionsCell.className = 'action-buttons';
                 if (username === 'admin') {
                     actionsCell.innerHTML = '<span style="color: var(--gray); font-size: 0.85rem;">(主账号)</span>';
                 } else {
@@ -1340,7 +1264,6 @@
                     actionsCell.appendChild(changePassBtn);
                     actionsCell.appendChild(deleteBtn);
                 }
-
                 row.innerHTML = `<td>${username}</td>`;
                 row.children[0].appendChild(passwordCell);
                 row.appendChild(actionsCell);
@@ -1593,7 +1516,7 @@
             const messagesBody = document.getElementById('messagesBody');
             if (!messagesBody) return;
             messagesBody.innerHTML = '';
-            const filteredMessages = messagesData.filter(message =>
+            const filteredMessages = messagesData.filter(message => 
                 message.name.toLowerCase().includes(searchTerm) ||
                 message.phone.includes(searchTerm) ||
                 message.message.toLowerCase().includes(searchTerm)
@@ -1616,40 +1539,6 @@
                 messagesBody.appendChild(row);
             });
         }
-        // 按状态筛选留言
-        function filterMessagesByStatus() {
-            const statusFilter = document.getElementById('messageStatusFilter').value;
-            const messagesData = window.messages || messages;
-            const messagesBody = document.getElementById('messagesBody');
-            if (!messagesBody) return;
-
-            let filteredMessages = messagesData;
-            if (statusFilter === 'unread') {
-                filteredMessages = messagesData.filter(msg => !msg.read);
-            } else if (statusFilter === 'read') {
-                filteredMessages = messagesData.filter(msg => msg.read);
-            }
-
-            messagesBody.innerHTML = '';
-            filteredMessages.forEach((message, index) => {
-                const row = document.createElement('tr');
-                const statusClass = message.read ? 'status-read' : 'status-unread';
-                const statusText = message.read ? '已读' : '未读';
-                row.innerHTML = `
-                    <td>${message.name}</td>
-                    <td>${message.phone}</td>
-                    <td>${message.message.substring(0, 30)}${message.message.length > 30 ? '...' : ''}</td>
-                    <td>${message.timestamp}</td>
-                    <td><span class="read-status ${statusClass}">${statusText}</span></td>
-                    <td>
-                        <button class="action-btn" onclick="markAsRead(${messagesData.indexOf(message)})">标为已读</button>
-                        <button class="action-btn delete-btn" onclick="deleteMessage(${messagesData.indexOf(message)})">删除</button>
-                    </td>
-                `;
-                messagesBody.appendChild(row);
-            });
-        }
-
         // 加载并显示系统日志
         function loadLogs() {
             const logsData = window.logs || logs;
@@ -1670,35 +1559,6 @@
                 logsContainer.appendChild(logItem);
             });
         }
-
-        // 按操作筛选日志
-        function filterLogs() {
-            const actionFilter = document.getElementById('logActionFilter').value;
-            const logsData = window.logs || logs;
-            const logsContainer = document.getElementById('logsContainer');
-            if (!logsContainer) return;
-
-            let filteredLogs = logsData;
-            if (actionFilter) {
-                filteredLogs = logsData.filter(log => log.action === actionFilter);
-            }
-
-            logsContainer.innerHTML = '';
-            // 反向显示（最新的在上面）
-            filteredLogs.slice().reverse().forEach(log => {
-                const logItem = document.createElement('div');
-                logItem.className = 'log-item';
-                logItem.innerHTML = `
-                    <div>
-                        <div class="log-time">${log.time}</div>
-                        <div class="log-action">${log.action}</div>
-                    </div>
-                    <div class="log-details">${log.details}</div>
-                `;
-                logsContainer.appendChild(logItem);
-            });
-        }
-
         // 添加日志
         function addLog(action, details) {
             const logEntry = {
@@ -1936,21 +1796,6 @@
         document.getElementById('closeChangePasswordModal').addEventListener('click', function() {
             document.getElementById('changeAdminPasswordModal').style.display = 'none';
         });
-
-        // 退出登录功能
-        document.getElementById('logoutLink').addEventListener('click', function(e) {
-            e.preventDefault();
-            logout();
-        });
-        function logout() {
-            isAdminLoggedIn = false;
-            currentAdminUser = null;
-            localStorage.removeItem('currentAdminUser');
-            document.getElementById('loginSection').style.display = 'block';
-            document.getElementById('adminPanel').style.display = 'none';
-            document.getElementById('currentAdminUser').textContent = '';
-            showSuccessModal('已成功退出登录。');
-        }
     </script>
 </body>
 </html>
