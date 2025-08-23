@@ -176,6 +176,17 @@
             outline: none;
             box-shadow: 0 0 0 2px rgba(228, 57, 60, 0.2);
         }
+        /* 新增：自定义选择框样式 */
+        .custom-select {
+            -webkit-appearance: none; /* 移除浏览器默认样式 */
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20 viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M7.41%208.59L12%2013.17l4.59-4.58L18%2010l-6%206-6-6z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 30px; /* 为箭头留出空间 */
+            cursor: pointer;
+        }
         .btn {
             padding: 12px 25px;
             background-color: var(--primary);
@@ -190,6 +201,22 @@
         }
         .btn:hover {
             background-color: #d32f2f;
+        }
+        /* 新增：按钮轮廓样式 */
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .btn-outline:hover {
+            background-color: rgba(228, 57, 60, 0.1);
         }
         /* 管理员面板 */
         #adminPanel {
@@ -647,9 +674,21 @@
             align-items: center;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
-        .pagination button {
-            padding: 8px 16px;
+        .page-info {
+            font-size: 0.85rem;
+            color: var(--gray);
+            min-width: 120px;
+        }
+        .page-nav {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            width: auto;
         }
     </style>
 </head>
@@ -830,11 +869,14 @@
                 <div class="settings-section message-management">
                     <h3><i class="fas fa-comments"></i> 留言管理</h3>
                     <div class="search-box">
-                        <select id="messageStatusFilter" onchange="filterMessages()">
-                            <option value="all">全部状态</option>
-                            <option value="unread">未读</option>
-                            <option value="read">已读</option>
-                        </select>
+                        <div class="form-group">
+                            <label for="messageStatusFilter">状态</label>
+                            <select id="messageStatusFilter" onchange="filterMessages()" class="custom-select">
+                                <option value="all">全部状态</option>
+                                <option value="unread">未读</option>
+                                <option value="read">已读</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <input type="text" id="messageSearch" placeholder="搜索留言...">
                         </div>
@@ -857,21 +899,28 @@
                     </table>
                     <!-- 留言分页 -->
                     <div class="pagination">
-                        <button id="prevPageBtn" class="btn" disabled><i class="fas fa-chevron-left"></i> 上一页</button>
-                        <span id="pageInfo">第 1 页，共 1 页</span>
-                        <button id="nextPageBtn" class="btn"><i class="fas fa-chevron-right"></i> 下一页</button>
+                        <div class="page-info">
+                            第 <span id="currentPageNum">1</span> 页，共 <span id="totalPagesNum">1</span> 页
+                        </div>
+                        <div class="page-nav">
+                            <button id="prevPageBtn" class="btn btn-sm" disabled><i class="fas fa-chevron-left"></i></button>
+                            <button id="nextPageBtn" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
+                        </div>
                     </div>
                 </div>
                 <!-- 系统日志 -->
                 <div class="settings-section">
                     <h3><i class="fas fa-history"></i> 系统日志</h3>
                     <div class="search-box">
-                        <select id="logTimeFilter" onchange="loadLogs()">
-                            <option value="all">全部时间</option>
-                            <option value="today">今天</option>
-                            <option value="week">本周</option>
-                            <option value="month">本月</option>
-                        </select>
+                        <div class="form-group">
+                            <label for="logTimeFilter">时间范围</label>
+                            <select id="logTimeFilter" onchange="loadLogs()" class="custom-select">
+                                <option value="all">全部时间</option>
+                                <option value="today">今天</option>
+                                <option value="week">本周</option>
+                                <option value="month">本月</option>
+                            </select>
+                        </div>
                         <button class="btn" onclick="loadLogs()"><i class="fas fa-sync-alt"></i> 刷新</button>
                     </div>
                     <div class="logs-container" id="logsContainer">
@@ -1049,6 +1098,9 @@
                 document.getElementById('customConfirmModal').style.display = 'none';
                 if (onCancel) onCancel();
             };
+            // --- 新增：为取消按钮添加 outline 样式 ---
+            confirmCancelBtn.className = 'btn btn-outline';
+            // --- 结束新增 ---
             document.getElementById('customConfirmModal').style.display = 'flex';
         }
         // --- 新增：显示自定义加载弹窗 ---
@@ -1565,7 +1617,8 @@
             // 更新分页控件
             document.getElementById('prevPageBtn').disabled = currentPage === 1;
             document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
-            document.getElementById('pageInfo').textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+            document.getElementById('currentPageNum').textContent = currentPage;
+            document.getElementById('totalPagesNum').textContent = totalPages;
 
             // --- 过滤和排序 ---
             messagesBody.innerHTML = '';
