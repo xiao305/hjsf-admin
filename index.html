@@ -100,21 +100,6 @@
         .nav-links a.active::after {
             width: 100%;
         }
-        /* 新增退出登录按钮 */
-        .logout-btn {
-            margin-left: 20px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 15px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: background-color 0.3s;
-        }
-        .logout-btn:hover {
-            background-color: #c82333;
-        }
         /* 内容容器 */
         .container {
             max-width: 1200px;
@@ -1534,19 +1519,21 @@
             });
         });
 
-        // 加载并显示留言列表
+        // 加载并显示留言列表 - 修复：最新的在上
         function loadMessages() {
             const messagesData = window.messages || messages;
             const messagesBody = document.getElementById('messagesBody');
             if (!messagesBody) return;
             messagesBody.innerHTML = '';
+            // 修复：最新的在上
+            const sortedMessages = [...messagesData].reverse();
             const filterValue = document.getElementById('messageStatusFilter').value;
-            let filteredMessages = messagesData;
+            let filteredMessages = sortedMessages;
 
             if (filterValue === 'unread') {
-                filteredMessages = messagesData.filter(msg => !msg.read);
+                filteredMessages = sortedMessages.filter(msg => !msg.read);
             } else if (filterValue === 'read') {
-                filteredMessages = messagesData.filter(msg => msg.read);
+                filteredMessages = sortedMessages.filter(msg => msg.read);
             }
 
             filteredMessages.forEach((message, index) => {
@@ -1644,11 +1631,23 @@
             const messagesBody = document.getElementById('messagesBody');
             if (!messagesBody) return;
             messagesBody.innerHTML = '';
-            const filteredMessages = messagesData.filter(message =>
+            // 修复：最新的在上
+            const sortedMessages = [...messagesData].reverse();
+            const filterValue = document.getElementById('messageStatusFilter').value;
+            let filteredMessages = sortedMessages;
+
+            if (filterValue === 'unread') {
+                filteredMessages = sortedMessages.filter(msg => !msg.read);
+            } else if (filterValue === 'read') {
+                filteredMessages = sortedMessages.filter(msg => msg.read);
+            }
+
+            filteredMessages = filteredMessages.filter(message =>
                 message.name.toLowerCase().includes(searchTerm) ||
                 message.phone.includes(searchTerm) ||
                 message.message.toLowerCase().includes(searchTerm)
             );
+
             filteredMessages.forEach((message, index) => {
                 const row = document.createElement('tr');
                 const statusClass = message.read ? 'status-read' : 'status-unread';
@@ -1660,15 +1659,15 @@
                     <td>${message.timestamp}</td>
                     <td><span class="read-status ${statusClass}">${statusText}</span></td>
                     <td>
-                        <button class="action-btn" onclick="markAsRead(${messagesData.indexOf(message)})">标为已读</button>
-                        <button class="action-btn delete-btn" onclick="deleteMessage(${messagesData.indexOf(message)})">删除</button>
+                        <button class="action-btn" onclick="markAsRead(${sortedMessages.indexOf(message)})">标为已读</button>
+                        <button class="action-btn delete-btn" onclick="deleteMessage(${sortedMessages.indexOf(message)})">删除</button>
                     </td>
                 `;
                 messagesBody.appendChild(row);
             });
         }
 
-        // 加载并显示系统日志
+        // 加载并显示系统日志 - 修复：时间筛选和错误处理
         function loadLogs() {
             const logsData = window.logs || logs;
             const logsContainer = document.getElementById('logsContainer');
@@ -1684,21 +1683,27 @@
                 const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString().split('T')[0];
 
                 filteredLogs = logsData.filter(log => {
-                    const logDate = new Date(log.time).toISOString().split('T')[0];
+                    // 修复：增加时间有效性检查
+                    const logDate = new Date(log.time);
+                    if (isNaN(logDate.getTime())) {
+                        console.warn("无效的日志时间:", log.time);
+                        return false; // 跳过无效时间的日志
+                    }
+                    const logDateString = logDate.toISOString().split('T')[0];
                     switch (filterValue) {
                         case 'today':
-                            return logDate === today;
+                            return logDateString === today;
                         case 'week':
-                            return logDate >= oneWeekAgo && logDate <= today;
+                            return logDateString >= oneWeekAgo && logDateString <= today;
                         case 'month':
-                            return logDate >= oneMonthAgo && logDate <= today;
+                            return logDateString >= oneMonthAgo && logDateString <= today;
                         default:
                             return true;
                     }
                 });
             }
 
-            // 反向显示（最新的在上面）
+            // 修复：最新的在上
             filteredLogs.slice().reverse().forEach(log => {
                 const logItem = document.createElement('div');
                 logItem.className = 'log-item';
