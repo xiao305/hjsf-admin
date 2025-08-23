@@ -100,6 +100,15 @@
         .nav-links a.active::after {
             width: 100%;
         }
+        /* 通用表单控件样式 */
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit; /* 继承父级字体 */
+        }
         /* 内容容器 */
         .container {
             max-width: 1200px;
@@ -159,13 +168,6 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
         }
         .btn {
             padding: 12px 25px;
@@ -278,6 +280,8 @@
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
         }
         .setting-row button {
             padding: 10px 15px;
@@ -310,23 +314,26 @@
         }
         .password-cell {
             position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
         }
         .password-display {
-            display: inline-block;
-            width: 100px;
             background: #f0f0f0;
             padding: 5px;
             border-radius: 4px;
             font-family: monospace;
+            width: 100px;
         }
         .toggle-password {
-            margin-left: 5px;
             cursor: pointer;
             color: var(--primary);
         }
         .action-buttons {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 5px;
         }
         .action-btn {
             padding: 6px 12px;
@@ -527,7 +534,6 @@
           /* 防止滚动穿透 */
           overflow: hidden;
         }
-
         .modal-content {
           background-color: #fefefe;
           margin: 15px auto;
@@ -541,12 +547,10 @@
           overflow-y: auto; /* 超出时可滚动 */
           animation: modalFadeIn 0.3s ease-out;
         }
-
         @keyframes modalFadeIn {
           from { opacity: 0; transform: translateY(-50px); }
           to { opacity: 1; transform: translateY(0); }
         }
-
         .modal-header {
           padding: 15px 20px;
           border-bottom: 1px solid #eee;
@@ -568,7 +572,6 @@
         .close:hover {
           color: #000;
         }
-
         .modal-body {
           padding: 20px;
         }
@@ -584,7 +587,6 @@
           justify-content: flex-end;
           gap: 10px;
         }
-
         /* 加载动画 */
         .loading-spinner {
           border: 4px solid #f3f3f3; /* Light grey */
@@ -599,7 +601,6 @@
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        
         /* 失败结果弹窗 - 底部添加详细说明 */
         .fail-detail {
             font-size: 0.8rem;
@@ -612,7 +613,6 @@
             border-radius: 6px;
             border-top: 1px solid #fee2e2;
         }
-        
         /* 响应式设计 */
         @media (max-width: 768px) {
             .nav-container {
@@ -649,40 +649,37 @@
             <div class="nav-links">
                 <a href="https://hjsf.uno" class="nav-link"><i class="fas fa-home"></i> 返回首页</a>
                 <a href="#" class="nav-link active" data-page="admin"><i class="fas fa-lock"></i> 管理员</a>
+                <a href="#" id="logoutLink" class="nav-link"><i class="fas fa-sign-out-alt"></i> 退出登录</a> <!-- 新增退出登录 -->
             </div>
         </div>
     </nav>
-
     <!-- 主要内容 -->
     <div class="container">
         <div class="page-header">
             <h1><i class="fas fa-user-shield"></i> 管理员控制台</h1>
             <p>欢迎使用红姐私房美食网站后台管理系统</p>
         </div>
-
         <!-- 登录区域 -->
         <div id="loginSection" class="login-container">
             <h2><i class="fas fa-sign-in-alt"></i> 管理员登录</h2>
             <form id="adminLogin">
                 <div class="form-group">
                     <label for="username"><i class="fas fa-user"></i> 用户名</label>
-                    <input type="text" id="username" required>
+                    <input type="text" id="username" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label for="password"><i class="fas fa-lock"></i> 密码</label>
-                    <input type="password" id="password" required>
+                    <input type="password" id="password" class="form-control" required>
                 </div>
                 <button type="submit" class="btn"><i class="fas fa-sign-in-alt"></i> 登录</button>
             </form>
         </div>
-
         <!-- 管理员面板 -->
         <div id="adminPanel" class="admin-content">
             <div class="admin-header">
                 <h2>仪表盘</h2>
                 <div><span id="currentAdminUser"></span></div>
             </div>
-
             <!-- 统计信息 -->
             <div class="admin-stats">
                 <div class="stat-card">
@@ -698,80 +695,91 @@
                     <div class="stat-value" id="unreadMessages">0</div>
                 </div>
             </div>
-
             <!-- 管理员设置区域 -->
             <div class="admin-settings">
                 <div class="settings-section">
                     <h3><i class="fas fa-cogs"></i> 页面状态管理</h3>
-                    
                     <!-- 特产商城设置 -->
                     <div class="page-setting">
                         <h4><i class="fas fa-shopping-bag"></i> 特产商城</h4>
                         <div class="setting-row">
                             <label>状态:</label>
-                            <select id="productsStatus">
+                            <select id="productsStatus" class="form-control">
                                 <option value="open">开启</option>
                                 <option value="limit">限制访问</option>
                                 <option value="closed">关闭</option>
                             </select>
-                            <input type="number" id="productsDuration" placeholder="限制秒数" min="1">
-                            <input type="text" id="productsPassword" placeholder="关闭密码">
+                            <div id="productsDurationContainer" class="setting-row-container" style="display: none;">
+                                <label>秒数:</label>
+                                <input type="number" id="productsDuration" class="form-control" placeholder="限制秒数" min="1">
+                            </div>
+                            <div id="productsPasswordContainer" class="setting-row-container" style="display: none;">
+                                <label>密码:</label>
+                                <input type="text" id="productsPassword" class="form-control" placeholder="关闭密码">
+                            </div>
                             <button class="btn" onclick="applyPageStatus('products')"><i class="fas fa-save"></i> 应用</button>
                         </div>
                         <div class="current-status">当前状态: <span id="productsCurrentStatus">未知</span></div>
                     </div>
-
                     <!-- 关于我们设置 -->
                     <div class="page-setting">
                         <h4><i class="fas fa-info-circle"></i> 关于我们</h4>
                         <div class="setting-row">
                             <label>状态:</label>
-                            <select id="aboutStatus">
+                            <select id="aboutStatus" class="form-control">
                                 <option value="open">开启</option>
                                 <option value="limit">限制访问</option>
                                 <option value="closed">关闭</option>
                             </select>
-                            <input type="number" id="aboutDuration" placeholder="限制秒数" min="1">
-                            <input type="text" id="aboutPassword" placeholder="关闭密码">
+                            <div id="aboutDurationContainer" class="setting-row-container" style="display: none;">
+                                <label>秒数:</label>
+                                <input type="number" id="aboutDuration" class="form-control" placeholder="限制秒数" min="1">
+                            </div>
+                            <div id="aboutPasswordContainer" class="setting-row-container" style="display: none;">
+                                <label>密码:</label>
+                                <input type="text" id="aboutPassword" class="form-control" placeholder="关闭密码">
+                            </div>
                             <button class="btn" onclick="applyPageStatus('about')"><i class="fas fa-save"></i> 应用</button>
                         </div>
                         <div class="current-status">当前状态: <span id="aboutCurrentStatus">未知</span></div>
                     </div>
-
                     <!-- 联系方式设置 -->
                     <div class="page-setting">
                         <h4><i class="fas fa-phone-alt"></i> 联系方式</h4>
                         <div class="setting-row">
                             <label>状态:</label>
-                            <select id="contactStatus">
+                            <select id="contactStatus" class="form-control">
                                 <option value="open">开启</option>
                                 <option value="limit">限制访问</option>
                                 <option value="closed">关闭</option>
                             </select>
-                            <input type="number" id="contactDuration" placeholder="限制秒数" min="1">
-                            <input type="text" id="contactPassword" placeholder="关闭密码">
+                            <div id="contactDurationContainer" class="setting-row-container" style="display: none;">
+                                <label>秒数:</label>
+                                <input type="number" id="contactDuration" class="form-control" placeholder="限制秒数" min="1">
+                            </div>
+                            <div id="contactPasswordContainer" class="setting-row-container" style="display: none;">
+                                <label>密码:</label>
+                                <input type="text" id="contactPassword" class="form-control" placeholder="关闭密码">
+                            </div>
                             <button class="btn" onclick="applyPageStatus('contact')"><i class="fas fa-save"></i> 应用</button>
                         </div>
                         <div class="current-status">当前状态: <span id="contactCurrentStatus">未知</span></div>
                     </div>
                 </div>
-
                 <!-- 管理员管理 -->
                 <div id="adminManagementSection" class="settings-section">
                     <h3><i class="fas fa-users"></i> 管理员管理</h3>
-                    
                     <!-- 创建新管理员 -->
                     <form id="addAdminForm" class="add-admin-form">
                         <h4>创建新管理员账号</h4>
                         <div class="form-row">
-                            <input type="text" id="newAdminUsername" placeholder="输入新管理员用户名" required>
+                            <input type="text" id="newAdminUsername" class="form-control" placeholder="输入新管理员用户名" required>
                             <button type="submit" class="btn"><i class="fas fa-plus"></i> 新增</button>
                         </div>
                         <p style="font-size: 0.9rem; color: var(--gray); margin-top: 10px;">
                             <i class="fas fa-info-circle"></i> 新账号默认密码为 <strong>123456</strong>，创建后请及时修改密码。
                         </p>
                     </form>
-
                     <!-- 管理员列表 -->
                     <div class="admin-list">
                         <h4 style="margin-top: 20px;">管理员列表</h4>
@@ -789,24 +797,27 @@
                         </table>
                     </div>
                 </div>
-
                 <!-- 修改当前登录管理员密码 -->
                 <div class="settings-section">
                     <h3><i class="fas fa-key"></i> 修改密码</h3>
                     <form id="changePasswordForm" class="add-admin-form">
                         <div class="form-row">
-                            <input type="password" id="oldPassword" placeholder="旧密码" required>
-                            <input type="password" id="newPassword" placeholder="新密码 (至少6位)" required>
+                            <input type="password" id="oldPassword" class="form-control" placeholder="旧密码" required>
+                            <input type="password" id="newPassword" class="form-control" placeholder="新密码 (至少6位)" required>
                             <button type="submit" class="btn"><i class="fas fa-save"></i> 保存</button>
                         </div>
                     </form>
                 </div>
-
                 <!-- 留言管理 -->
                 <div class="settings-section message-management">
                     <h3><i class="fas fa-comments"></i> 留言管理</h3>
                     <div class="search-box">
-                        <input type="text" id="messageSearch" placeholder="搜索留言...">
+                        <select id="messageStatusFilter" class="form-control" onchange="filterMessagesByStatus()">
+                            <option value="">全部状态</option>
+                            <option value="unread">未读</option>
+                            <option value="read">已读</option>
+                        </select>
+                        <input type="text" id="messageSearch" class="form-control" placeholder="搜索留言...">
                         <button class="btn" onclick="filterMessages()"><i class="fas fa-search"></i> 搜索</button>
                     </div>
                     <table class="message-table" id="messagesTable">
@@ -825,15 +836,23 @@
                         </tbody>
                     </table>
                 </div>
-
                 <!-- 系统日志 -->
                 <div class="settings-section">
                     <h3><i class="fas fa-history"></i> 系统日志</h3>
+                    <select id="logActionFilter" class="form-control" onchange="filterLogs()">
+                        <option value="">全部操作</option>
+                        <option value="管理员登录">管理员登录</option>
+                        <option value="新增管理员">新增管理员</option>
+                        <option value="修改管理员密码">修改管理员密码</option>
+                        <option value="删除管理员">删除管理员</option>
+                        <option value="修改密码">修改密码</option>
+                        <option value="标为已读">标为已读</option>
+                        <option value="删除留言">删除留言</option>
+                    </select>
                     <div class="logs-container" id="logsContainer">
                         <!-- 日志列表将通过 JavaScript 动态加载 -->
                     </div>
                 </div>
-
                 <!-- 流量图 -->
                 <div class="settings-section">
                     <h3><i class="fas fa-chart-line"></i> 访问流量</h3>
@@ -844,7 +863,6 @@
             </div>
         </div>
     </div>
-
     <!-- 修改管理员密码的模态框 -->
     <div id="changeAdminPasswordModal" class="modal">
         <div class="modal-content">
@@ -857,14 +875,13 @@
                 <form id="changeAdminPasswordForm">
                     <div class="form-group">
                         <label for="newAdminPassword">新密码:</label>
-                        <input type="password" id="newAdminPassword" required>
+                        <input type="password" id="newAdminPassword" class="form-control" required>
                     </div>
                     <button type="submit" class="btn"><i class="fas fa-save"></i> 保存</button>
                 </form>
             </div>
         </div>
     </div>
-
     <!-- 自定义成功弹窗 -->
     <div id="customSuccessModal" class="custom-modal" style="display:none;">
       <div class="modal-content">
@@ -880,7 +897,6 @@
         </div>
       </div>
     </div>
-
     <!-- 自定义失败弹窗 -->
     <div id="customFailModal" class="custom-modal" style="display:none;">
       <div class="modal-content">
@@ -897,7 +913,6 @@
         </div>
       </div>
     </div>
-
     <!-- 自定义确认弹窗 -->
     <div id="customConfirmModal" class="custom-modal" style="display:none;">
       <div class="modal-content">
@@ -914,7 +929,6 @@
         </div>
       </div>
     </div>
-
     <!-- 自定义加载弹窗 -->
     <div id="customLoadingModal" class="custom-modal" style="display:none;">
       <div class="modal-content">
@@ -924,36 +938,30 @@
         </div>
       </div>
     </div>
-
     <script>
         // 全局变量
         let isAdminLoggedIn = false;
         let currentAdminUser = null; // 记录当前登录的管理员用户名
-        
         // 修复：使用 Base64 编码存储密码
         let adminAccounts = JSON.parse(localStorage.getItem('adminAccounts')) || {'admin': btoa('hongjie123')}; // 默认账号 admin:hongjie123 (Base64)
         let messages = JSON.parse(localStorage.getItem('messages')) || [];
         let logs = JSON.parse(localStorage.getItem('adminLogs')) || [];
         let visits = JSON.parse(localStorage.getItem('siteVisits')) || { total: 0, daily: {} };
-        
         // 从 localStorage 获取页面状态配置
         let pageStatusConfig = JSON.parse(localStorage.getItem('pageStatusConfig')) || {
             products: { status: 'limit', duration: 10 },
             about: { status: 'limit', duration: 10 },
             contact: { status: 'limit', duration: 10 }
         };
-        
         // 从 localStorage 获取页面密码 (关闭状态时需要)
         let pagePasswords = JSON.parse(localStorage.getItem('pagePasswords')) || {
             products: '',
             about: '',
             contact: ''
         };
-
         // --- 新增：阿里云 FC 配置 ---
         // 替换为您的实际阿里云函数 HTTP 触发器 URL
         const FC_SYNC_URL = "https://updatewteconfig-aquxgazwhl.cn-hangzhou.fcapp.run/";
-
         // --- 新增：调用阿里云 FC 函数同步配置的函数 ---
         async function syncConfigToFC(configData) {
             console.log("Aliyun FC Sync: 开始同步配置到 FC...", configData);
@@ -984,13 +992,11 @@
                 throw error; // 重新抛出错误，让调用者处理
             }
         }
-
         // --- 新增：显示自定义成功弹窗 ---
         function showSuccessModal(message) {
             document.getElementById('successMessage').textContent = message;
             document.getElementById('customSuccessModal').style.display = 'flex';
         }
-
         // --- 新增：显示自定义失败弹窗 ---
         function showFailModal(message, detail = '') {
             document.getElementById('failMessage').textContent = message;
@@ -1003,64 +1009,49 @@
             }
             document.getElementById('customFailModal').style.display = 'flex';
         }
-
         // --- 新增：显示自定义确认弹窗 ---
         function showConfirmModal(title, message, onConfirm, onCancel) {
             document.getElementById('confirmTitle').textContent = title;
             document.getElementById('confirmMessage').textContent = message;
-            
             const confirmOkBtn = document.getElementById('confirmOkBtn');
             const confirmCancelBtn = document.getElementById('confirmCancelBtn');
-            
             // 清除之前的事件监听器
             confirmOkBtn.onclick = function() {
                 document.getElementById('customConfirmModal').style.display = 'none';
                 if (onConfirm) onConfirm();
             };
-            
             confirmCancelBtn.onclick = function() {
                 document.getElementById('customConfirmModal').style.display = 'none';
                 if (onCancel) onCancel();
             };
-            
             document.getElementById('customConfirmModal').style.display = 'flex';
         }
-
         // --- 新增：显示自定义加载弹窗 ---
         function showLoadingModal(message = '正在处理中...') {
             document.getElementById('loadingMessage').textContent = message;
             document.getElementById('customLoadingModal').style.display = 'flex';
         }
-
         // --- 新增：隐藏自定义加载弹窗 ---
         function hideLoadingModal() {
             document.getElementById('customLoadingModal').style.display = 'none';
         }
-
         // --- 新增：初始化页面 ---
         document.addEventListener('DOMContentLoaded', function() {
             console.log("🔧 页面DOM加载完成，开始初始化...");
-            
             // 确保所有元素都已加载后再执行
             setTimeout(() => {
                 // 初始化设置面板 UI
                 initializeSettingsPanel();
-                
                 // 更新统计信息
                 updateStats();
-                
                 // 加载管理员列表
                 loadAdminList();
-                
                 // 加载留言列表
                 loadMessages();
-                
                 // 加载日志
                 loadLogs();
-                
                 // 初始化流量图
                 initTrafficChart();
-                
                 // 检查是否已登录
                 const savedUser = localStorage.getItem('currentAdminUser');
                 if (savedUser) {
@@ -1073,63 +1064,48 @@
                         document.getElementById('currentAdminUser').textContent = `当前用户: ${savedUser}`;
                     }
                 }
-                
                 // 加载OSS配置
                 loadConfigFromOSSAndInitializeSettingsPanel();
-                
                 console.log("✅ 页面初始化完成");
             }, 100);
         });
-
         // 登录功能
         document.getElementById('adminLogin').addEventListener('submit', function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            
             // 显示加载弹窗
             showLoadingModal('正在验证登录信息...');
-            
             // 延迟确保OSS配置加载完成
             setTimeout(() => {
                 // 修复：优先使用从 OSS 加载的全局 adminAccounts，回退到局部变量
                 const accountsToUse = window.adminAccounts || adminAccounts;
-                
                 console.log("登录验证时使用的账号列表 (accountsToUse):", accountsToUse);
                 console.log("验证用户名:", username);
                 console.log("验证密码:", password);
-                
                 const storedHash = accountsToUse[username];
                 console.log("存储的密码哈希:", storedHash);
-                
                 if(storedHash && storedHash === btoa(password)) {
                     isAdminLoggedIn = true;
                     currentAdminUser = username;
-                    
                     // 保存当前登录用户到本地存储
                     localStorage.setItem('currentAdminUser', username);
-                    
                     // 隐藏加载弹窗
                     hideLoadingModal();
-                    
                     // 显示面板
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('adminPanel').style.display = 'block';
                     document.getElementById('currentAdminUser').textContent = `当前用户: ${username}`;
-                    
                     // 记录登录日志
                     addLog('管理员登录', `管理员 ${username} 登录系统`);
                     console.log(`管理员 ${username} 登录成功`);
-                    
                     // 显示成功弹窗
                     showSuccessModal(`欢迎，${username}！登录成功。`);
-                    
                     // 加载配置并初始化设置面板
                     loadConfigFromOSSAndInitializeSettingsPanel();
                 } else {
                     // 隐藏加载弹窗
                     hideLoadingModal();
-                    
                     // 显示失败弹窗
                     showFailModal('登录失败', '管理员账号或密码错误！');
                     console.log(`管理员 ${username} 登录失败：账号或密码错误`);
@@ -1137,7 +1113,6 @@
                 }
             }, 500);
         });
-
         // 更新统计信息
         function updateStats() {
             // 优先使用全局变量
@@ -1148,22 +1123,18 @@
             const unreadCount = messagesData.filter(msg => !msg.read).length;
             document.getElementById('unreadMessages').textContent = unreadCount;
         }
-
         // 初始化设置面板 UI
         function initializeSettingsPanel() {
             console.log("🔧 开始初始化设置面板 UI...");
-            
             // 修复：优先使用从 OSS 加载的全局配置
             const config = window.pageStatusConfig || pageStatusConfig;
             const passwords = window.pagePasswords || pagePasswords;
-            
             // 设置页面状态
             const pageSettings = [
                 { id: 'products', config: config.products, passwords: passwords },
                 { id: 'about', config: config.about, passwords: passwords },
                 { id: 'contact', config: config.contact, passwords: passwords }
             ];
-            
             pageSettings.forEach(setting => {
                 const { id, config: pageConfig, passwords: pagePasswords } = setting;
                 if (pageConfig) {
@@ -1171,20 +1142,46 @@
                     const durationInput = document.getElementById(`${id}Duration`);
                     const passwordInput = document.getElementById(`${id}Password`);
                     const statusElement = document.getElementById(`${id}CurrentStatus`);
-                    
                     statusSelect.value = pageConfig.status;
                     durationInput.value = pageConfig.duration || '';
                     passwordInput.value = pagePasswords[id] || '';
-                    
                     let statusText = pageConfig.status;
                     if (pageConfig.status === 'limit') {
                         statusText += ` (${pageConfig.duration || 10}秒)`;
                     }
                     statusElement.textContent = statusText;
-                    statusElement.style.color = pageConfig.status === 'open' ? 'green' : 
+                    statusElement.style.color = pageConfig.status === 'open' ? 'green' :
                                               (pageConfig.status === 'limit' ? 'orange' : 'red');
+
+                    // 初始化状态显示
+                    updatePageStatusVisibility(id, pageConfig.status);
+                    // 添加状态变更监听器
+                    statusSelect.addEventListener('change', function() {
+                        const newStatus = this.value;
+                        updatePageStatusVisibility(id, newStatus);
+                        // 保存状态
+                        applyPageStatus(id);
+                    });
                 }
             });
+        }
+
+        // 根据状态更新显示
+        function updatePageStatusVisibility(pageId, status) {
+            const durationContainer = document.getElementById(`${pageId}DurationContainer`);
+            const passwordContainer = document.getElementById(`${pageId}PasswordContainer`);
+            if (durationContainer && passwordContainer) {
+                if (status === 'limit') {
+                    durationContainer.style.display = 'flex';
+                    passwordContainer.style.display = 'none';
+                } else if (status === 'closed') {
+                    durationContainer.style.display = 'none';
+                    passwordContainer.style.display = 'flex';
+                } else {
+                    durationContainer.style.display = 'none';
+                    passwordContainer.style.display = 'none';
+                }
+            }
         }
 
         // 应用页面状态设置
@@ -1192,23 +1189,18 @@
             // 修复：优先使用全局变量
             const config = window.pageStatusConfig || pageStatusConfig;
             const passwords = window.pagePasswords || pagePasswords;
-            
             const statusSelect = document.getElementById(`${pageId}Status`);
             const durationInput = document.getElementById(`${pageId}Duration`);
             const passwordInput = document.getElementById(`${pageId}Password`);
-            
             const status = statusSelect.value;
             const duration = durationInput.value ? parseInt(durationInput.value) : 10;
             const password = passwordInput.value;
-            
             // 更新配置
             config[pageId] = { status, duration };
             passwords[pageId] = password;
-            
             // 保存到本地存储
             localStorage.setItem('pageStatusConfig', JSON.stringify(config));
             localStorage.setItem('pagePasswords', JSON.stringify(passwords));
-            
             // 更新UI
             const statusElement = document.getElementById(`${pageId}CurrentStatus`);
             let statusText = status;
@@ -1216,9 +1208,8 @@
                 statusText += ` (${duration}秒)`;
             }
             statusElement.textContent = statusText;
-            statusElement.style.color = status === 'open' ? 'green' : 
+            statusElement.style.color = status === 'open' ? 'green' :
                                       (status === 'limit' ? 'orange' : 'red');
-            
             // 同步到云端
             showLoadingModal('正在同步配置到云端...');
             syncConfigToFC({
@@ -1239,49 +1230,39 @@
                 console.error('同步配置失败:', error);
             });
         }
-
         // 创建新管理员账号
         document.getElementById('addAdminForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
             if (!isAdminLoggedIn) {
                 showFailModal('权限不足', '请先登录！');
                 return;
             }
-            
             // 权限检查
             if (currentAdminUser !== 'admin') {
                 showFailModal('权限不足', '只有主管理员 (admin) 可以创建新管理员账号！');
                 return;
             }
-            
             const newUsername = document.getElementById('newAdminUsername').value.trim();
             if (!newUsername) {
                 showFailModal('输入错误', '请输入新管理员账号！');
                 return;
             }
-            
             // 检查全局变量
             const currentAdminAccounts = window.adminAccounts || adminAccounts;
             if (currentAdminAccounts[newUsername]) {
                 showFailModal('账号已存在', '该管理员账号已存在！');
                 return;
             }
-            
             // 添加新账号，默认密码 '123456'
             const defaultPassword = '123456';
-            
             // 更新全局变量
             if (window.adminAccounts) {
                 window.adminAccounts[newUsername] = btoa(defaultPassword);
             }
-            
             // 更新局部变量
             adminAccounts[newUsername] = btoa(defaultPassword);
-            
             // 记录日志
             addLog('新增管理员', `管理员 ${currentAdminUser} 新增了管理员账号: ${newUsername} (默认密码: ${defaultPassword})`);
-            
             // 同步到云端
             showLoadingModal('正在同步新管理员账号...');
             syncConfigToFC({
@@ -1304,29 +1285,23 @@
                 loadAdminList();
             });
         });
-
         // 加载并显示管理员列表
         function loadAdminList() {
             const accounts = window.adminAccounts || adminAccounts;
             const listBody = document.getElementById('adminListBody');
             if (!listBody) return;
-            
             listBody.innerHTML = '';
-            
             Object.keys(accounts).forEach(username => {
                 const row = document.createElement('tr');
                 const passwordCell = document.createElement('td');
                 passwordCell.className = 'password-cell';
-                
                 const passwordDisplay = document.createElement('span');
                 passwordDisplay.className = 'password-display';
                 passwordDisplay.textContent = '••••••••';
-                
                 const toggleBtn = document.createElement('span');
                 toggleBtn.className = 'toggle-password';
                 toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
                 toggleBtn.title = '显示密码';
-                
                 toggleBtn.addEventListener('click', function() {
                     if (passwordDisplay.textContent === '••••••••') {
                         passwordDisplay.textContent = atob(accounts[username]); // 解码显示真实密码
@@ -1338,11 +1313,11 @@
                         toggleBtn.title = '显示密码';
                     }
                 });
-                
                 passwordCell.appendChild(passwordDisplay);
                 passwordCell.appendChild(toggleBtn);
-                
+
                 const actionsCell = document.createElement('td');
+                actionsCell.className = 'action-buttons';
                 if (username === 'admin') {
                     actionsCell.innerHTML = '<span style="color: var(--gray); font-size: 0.85rem;">(主账号)</span>';
                 } else {
@@ -1352,25 +1327,22 @@
                     changePassBtn.onclick = function() {
                         showChangePasswordModal(username);
                     };
-                    
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'action-btn delete-btn';
                     deleteBtn.textContent = '删除';
                     deleteBtn.onclick = function() {
                         deleteAdmin(username);
                     };
-                    
                     actionsCell.appendChild(changePassBtn);
                     actionsCell.appendChild(deleteBtn);
                 }
-                
+
                 row.innerHTML = `<td>${username}</td>`;
                 row.children[0].appendChild(passwordCell);
                 row.appendChild(actionsCell);
                 listBody.appendChild(row);
             });
         }
-
         // 显示修改特定管理员密码的模态框
         let targetAdminForPasswordChange = null;
         function showChangePasswordModal(username) {
@@ -1379,34 +1351,27 @@
             document.getElementById('newAdminPassword').value = '';
             document.getElementById('changeAdminPasswordModal').style.display = 'flex';
         }
-
         // 修改管理员密码
         document.getElementById('changeAdminPasswordForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
             if (!isAdminLoggedIn || !targetAdminForPasswordChange) {
                 showFailModal('权限不足', '请先登录并选择要修改密码的管理员！');
                 return;
             }
-            
             const newPassword = document.getElementById('newAdminPassword').value.trim();
             if (!newPassword) {
                 showFailModal('输入错误', '请输入新密码！');
                 return;
             }
-            
             // 更新内存中的密码
             const accounts = window.adminAccounts || adminAccounts;
             accounts[targetAdminForPasswordChange] = btoa(newPassword);
-            
             // 更新全局变量
             if (window.adminAccounts) {
                 window.adminAccounts[targetAdminForPasswordChange] = btoa(newPassword);
             }
-            
             // 记录日志
             addLog('修改管理员密码', `管理员 ${currentAdminUser} 修改了 ${targetAdminForPasswordChange} 的密码`);
-            
             // 同步到云端
             showLoadingModal('正在同步密码修改...');
             syncConfigToFC({
@@ -1429,14 +1394,12 @@
                 loadAdminList();
             });
         });
-
         // 删除管理员
         function deleteAdmin(username) {
             if (!isAdminLoggedIn || username === 'admin') {
                 showFailModal('权限不足', '无法删除此管理员账号！');
                 return;
             }
-            
             // 使用自定义确认弹窗
             showConfirmModal(
                 '确认删除',
@@ -1445,15 +1408,12 @@
                     // 用户确认删除
                     const accounts = window.adminAccounts || adminAccounts;
                     delete accounts[username];
-                    
                     // 更新全局变量
                     if (window.adminAccounts) {
                         delete window.adminAccounts[username];
                     }
-                    
                     // 记录日志
                     addLog('删除管理员', `管理员 ${currentAdminUser} 删除了管理员账号: ${username}`);
-                    
                     // 同步到云端
                     showLoadingModal('正在同步删除操作...');
                     syncConfigToFC({
@@ -1480,44 +1440,35 @@
                 }
             );
         }
-
         // 修改当前登录管理员的密码
         document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
             if (!isAdminLoggedIn) {
                 showFailModal('权限不足', '请先登录！');
                 return;
             }
-            
             const oldPasswordInput = document.getElementById('oldPassword');
             const newPasswordInput = document.getElementById('newPassword');
             const oldPassword = oldPasswordInput.value;
             const newPassword = newPasswordInput.value;
-            
             // 验证旧密码
             const accountsToUse = window.adminAccounts || adminAccounts;
             if (accountsToUse[currentAdminUser] !== btoa(oldPassword)) {
                 showFailModal('验证失败', '旧密码不正确！');
                 return;
             }
-            
             if (newPassword.length < 6) {
                 showFailModal('输入错误', '新密码长度至少为6位！');
                 return;
             }
-            
             // 更新密码
             accountsToUse[currentAdminUser] = btoa(newPassword);
-            
             // 更新全局变量
             if (window.adminAccounts) {
                 window.adminAccounts[currentAdminUser] = btoa(newPassword);
             }
-            
             // 记录日志
             addLog('修改密码', `管理员 ${currentAdminUser} 修改了自己的密码`);
-            
             // 同步到云端
             showLoadingModal('正在同步密码修改...');
             syncConfigToFC({
@@ -1540,20 +1491,16 @@
                 newPasswordInput.value = '';
             });
         });
-
         // 加载并显示留言列表
         function loadMessages() {
             const messagesData = window.messages || messages;
             const messagesBody = document.getElementById('messagesBody');
             if (!messagesBody) return;
-            
             messagesBody.innerHTML = '';
-            
             messagesData.forEach((message, index) => {
                 const row = document.createElement('tr');
                 const statusClass = message.read ? 'status-read' : 'status-unread';
                 const statusText = message.read ? '已读' : '未读';
-                
                 row.innerHTML = `
                     <td>${message.name}</td>
                     <td>${message.phone}</td>
@@ -1568,25 +1515,20 @@
                 messagesBody.appendChild(row);
             });
         }
-
         // 标记留言为已读
         function markAsRead(index) {
             const messagesData = window.messages || messages;
             if (index >= 0 && index < messagesData.length) {
                 messagesData[index].read = true;
-                
                 // 更新全局变量
                 if (window.messages) {
                     window.messages[index].read = true;
                 }
-                
                 // 记录日志
                 addLog('标为已读', `管理员 ${currentAdminUser} 将 ${messagesData[index].name} 的留言标为已读`);
-                
                 // 重新加载
                 loadMessages();
                 updateStats();
-                
                 // 同步到云端
                 syncConfigToFC({
                     pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
@@ -1597,11 +1539,9 @@
                     siteVisits: window.visits || visits,
                     timestamp: new Date().toISOString()
                 });
-                
                 showSuccessModal('留言已标为已读。');
             }
         }
-
         // 删除留言
         function deleteMessage(index) {
             // 使用自定义确认弹窗
@@ -1614,19 +1554,15 @@
                     if (index >= 0 && index < messagesData.length) {
                         // 记录删除日志
                         addLog('删除留言', `管理员 ${currentAdminUser} 删除了 ${messagesData[index].name} 的留言`);
-                        
                         // 从数组中删除
                         messagesData.splice(index, 1);
-                        
                         // 更新全局变量
                         if (window.messages) {
                             window.messages = messagesData;
                         }
-                        
                         // 重新加载
                         loadMessages();
                         updateStats();
-                        
                         // 同步到云端
                         syncConfigToFC({
                             pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
@@ -1637,7 +1573,6 @@
                             siteVisits: window.visits || visits,
                             timestamp: new Date().toISOString()
                         });
-                        
                         showSuccessModal('留言已删除。');
                     }
                 },
@@ -1647,28 +1582,55 @@
                 }
             );
         }
-
         // 搜索留言
         function filterMessages() {
             const searchTerm = document.getElementById('messageSearch').value.toLowerCase();
             const messagesData = window.messages || messages;
             const messagesBody = document.getElementById('messagesBody');
-            
             if (!messagesBody) return;
-            
             messagesBody.innerHTML = '';
-            
-            const filteredMessages = messagesData.filter(message => 
+            const filteredMessages = messagesData.filter(message =>
                 message.name.toLowerCase().includes(searchTerm) ||
                 message.phone.includes(searchTerm) ||
                 message.message.toLowerCase().includes(searchTerm)
             );
-            
             filteredMessages.forEach((message, index) => {
                 const row = document.createElement('tr');
                 const statusClass = message.read ? 'status-read' : 'status-unread';
                 const statusText = message.read ? '已读' : '未读';
-                
+                row.innerHTML = `
+                    <td>${message.name}</td>
+                    <td>${message.phone}</td>
+                    <td>${message.message.substring(0, 30)}${message.message.length > 30 ? '...' : ''}</td>
+                    <td>${message.timestamp}</td>
+                    <td><span class="read-status ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="action-btn" onclick="markAsRead(${messagesData.indexOf(message)})">标为已读</button>
+                        <button class="action-btn delete-btn" onclick="deleteMessage(${messagesData.indexOf(message)})">删除</button>
+                    </td>
+                `;
+                messagesBody.appendChild(row);
+            });
+        }
+        // 按状态筛选留言
+        function filterMessagesByStatus() {
+            const statusFilter = document.getElementById('messageStatusFilter').value;
+            const messagesData = window.messages || messages;
+            const messagesBody = document.getElementById('messagesBody');
+            if (!messagesBody) return;
+
+            let filteredMessages = messagesData;
+            if (statusFilter === 'unread') {
+                filteredMessages = messagesData.filter(msg => !msg.read);
+            } else if (statusFilter === 'read') {
+                filteredMessages = messagesData.filter(msg => msg.read);
+            }
+
+            messagesBody.innerHTML = '';
+            filteredMessages.forEach((message, index) => {
+                const row = document.createElement('tr');
+                const statusClass = message.read ? 'status-read' : 'status-unread';
+                const statusText = message.read ? '已读' : '未读';
                 row.innerHTML = `
                     <td>${message.name}</td>
                     <td>${message.phone}</td>
@@ -1689,11 +1651,37 @@
             const logsData = window.logs || logs;
             const logsContainer = document.getElementById('logsContainer');
             if (!logsContainer) return;
-            
             logsContainer.innerHTML = '';
-            
             // 反向显示（最新的在上面）
             logsData.slice().reverse().forEach(log => {
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                logItem.innerHTML = `
+                    <div>
+                        <div class="log-time">${log.time}</div>
+                        <div class="log-action">${log.action}</div>
+                    </div>
+                    <div class="log-details">${log.details}</div>
+                `;
+                logsContainer.appendChild(logItem);
+            });
+        }
+
+        // 按操作筛选日志
+        function filterLogs() {
+            const actionFilter = document.getElementById('logActionFilter').value;
+            const logsData = window.logs || logs;
+            const logsContainer = document.getElementById('logsContainer');
+            if (!logsContainer) return;
+
+            let filteredLogs = logsData;
+            if (actionFilter) {
+                filteredLogs = logsData.filter(log => log.action === actionFilter);
+            }
+
+            logsContainer.innerHTML = '';
+            // 反向显示（最新的在上面）
+            filteredLogs.slice().reverse().forEach(log => {
                 const logItem = document.createElement('div');
                 logItem.className = 'log-item';
                 logItem.innerHTML = `
@@ -1714,86 +1702,66 @@
                 action: action,
                 details: details
             };
-            
             // 添加到全局日志数组
             if (window.logs) {
                 window.logs.unshift(logEntry);
             } else {
                 logs.unshift(logEntry);
             }
-            
             // 保存到本地存储
             localStorage.setItem('adminLogs', JSON.stringify(window.logs || logs));
-            
             // 更新显示
             loadLogs();
         }
-
         // 初始化流量图
         function initTrafficChart() {
             const chartContainer = document.getElementById('trafficChart');
             if (!chartContainer) return;
-            
             chartContainer.innerHTML = '';
-            
             const visitsData = window.visits?.daily || visits.daily || {};
             const days = Object.keys(visitsData).slice(-7); // 最近7天
-            
             if (days.length === 0) {
                 chartContainer.innerHTML = '<p style="text-align:center; color:#999;">暂无访问数据</p>';
                 return;
             }
-            
             const maxVisits = Math.max(...Object.values(visitsData));
-            
             days.forEach(day => {
                 const barContainer = document.createElement('div');
                 barContainer.style.display = 'flex';
                 barContainer.style.flexDirection = 'column';
                 barContainer.style.alignItems = 'center';
-                
                 const barValue = visitsData[day] || 0;
                 const heightPercent = maxVisits > 0 ? (barValue / maxVisits) * 100 : 0;
-                
                 const bar = document.createElement('div');
                 bar.className = 'traffic-bar';
                 bar.style.height = `${Math.max(heightPercent, 10)}%`;
                 bar.innerHTML = `<span class="traffic-value">${barValue}</span>`;
-                
                 const label = document.createElement('span');
                 label.className = 'traffic-bar-label';
                 label.textContent = day.split('-')[2]; // 只显示日期
-                
                 barContainer.appendChild(bar);
                 barContainer.appendChild(label);
                 chartContainer.appendChild(barContainer);
             });
         }
-
         // 从 OSS 加载配置并初始化设置面板
         async function loadConfigFromOSSAndInitializeSettingsPanel() {
             console.log("🔄 开始从阿里云 OSS 加载配置...");
-            
             // 确保显示加载状态
             if (typeof showLoadingModal !== 'undefined') {
                 showLoadingModal("正在从云端加载配置...");
             }
-            
             try {
                 // 使用正确的OSS地址
                 const OSS_BUCKET_NAME = "xiao-config-bucket"; // <--- 请修改为您的实际 Bucket 名称
                 const REGION = "oss-cn-hangzhou"; // <--- 请修改为您的实际 Bucket 所在地域
                 const OSS_CONFIG_URL = `https://${OSS_BUCKET_NAME}.${REGION}.aliyuncs.com/test-config.json?${new Date().getTime()}`; // <--- 修改为您的实际文件名
-                
                 console.log("尝试访问OSS配置:", OSS_CONFIG_URL);
-                
                 const response = await fetch(OSS_CONFIG_URL, {
                     cache: 'no-store',
                     mode: 'cors'
                 });
-                
                 console.log("Fetch 响应对象:", response);
-                
                 if (!response.ok) {
                     if (response.status === 404) {
                         console.log("OSS: 配置文件未找到，使用本地默认配置");
@@ -1806,11 +1774,9 @@
                     }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
                 // 检查响应内容类型
                 const contentType = response.headers.get('content-type');
                 console.log("OSS: 响应 Content-Type:", contentType);
-                
                 let data = null;
                 if (contentType && contentType.includes('application/json')) {
                     console.log("OSS: 响应体是 JSON 类型，尝试解析...");
@@ -1844,10 +1810,8 @@
                         throw new Error("响应内容不是有效的JSON格式");
                     }
                 }
-                
                 if (data && data.pageStatusConfig) {
                     console.log("✅ 成功从 OSS 读取到配置:", data);
-                    
                     // 更新全局配置变量
                     window.pageStatusConfig = data.pageStatusConfig;
                     window.pagePasswords = data.pagePasswords || {};
@@ -1855,30 +1819,22 @@
                     window.messages = data.messages || [];
                     window.logs = data.adminLogs || [];
                     window.visits = data.siteVisits || { total: 0, daily: {} };
-                    
                     console.log("📊 访问量数据:", window.visits);
                     console.log("💬 留言数据:", window.messages);
                     console.log("👥 管理员账号:", window.adminAccounts);
                     console.log("🔄 已更新所有全局配置和数据变量");
-                    
                     // 初始化设置面板 UI
                     initializeSettingsPanel();
-                    
                     // 更新统计信息
                     updateStats();
-                    
                     // 加载管理员列表
                     loadAdminList();
-                    
                     // 加载留言列表
                     loadMessages();
-                    
                     // 加载日志
                     loadLogs();
-                    
                     // 初始化流量图
                     initTrafficChart();
-                    
                     // 保存到本地存储
                     localStorage.setItem('pageStatusConfig', JSON.stringify(window.pageStatusConfig));
                     localStorage.setItem('pagePasswords', JSON.stringify(window.pagePasswords));
@@ -1886,9 +1842,7 @@
                     localStorage.setItem('messages', JSON.stringify(window.messages));
                     localStorage.setItem('adminLogs', JSON.stringify(window.logs));
                     localStorage.setItem('siteVisits', JSON.stringify(window.visits));
-                    
                     console.log("💾 已保存所有配置到本地存储");
-                    
                     if (typeof hideLoadingModal !== 'undefined') {
                         hideLoadingModal();
                     }
@@ -1910,7 +1864,6 @@
                     window.messages = JSON.parse(localStorage.getItem('messages')) || [];
                     window.logs = JSON.parse(localStorage.getItem('adminLogs')) || [];
                     window.visits = JSON.parse(localStorage.getItem('siteVisits')) || { total: 0, daily: {} };
-                    
                     initializeSettingsPanel();
                     if (typeof hideLoadingModal !== 'undefined') {
                         hideLoadingModal();
@@ -1934,7 +1887,6 @@
                 window.messages = JSON.parse(localStorage.getItem('messages')) || [];
                 window.logs = JSON.parse(localStorage.getItem('adminLogs')) || [];
                 window.visits = JSON.parse(localStorage.getItem('siteVisits')) || { total: 0, daily: {} };
-                
                 console.log("🔙 回退到使用 localStorage 配置 (因错误)");
                 initializeSettingsPanel();
                 if (typeof hideLoadingModal !== 'undefined') {
@@ -1943,7 +1895,6 @@
                 return false;
             }
         }
-
         // 关闭弹窗事件
         document.querySelectorAll('.close').forEach(closeBtn => {
             closeBtn.addEventListener('click', function() {
@@ -1953,7 +1904,6 @@
                 }
             });
         });
-
         // 点击弹窗外部关闭
         document.querySelectorAll('.custom-modal, .modal').forEach(modal => {
             modal.addEventListener('click', function(e) {
@@ -1962,31 +1912,41 @@
                 }
             });
         });
-
         // 成功弹窗确定按钮
         document.getElementById('successOkBtn').addEventListener('click', function() {
             document.getElementById('customSuccessModal').style.display = 'none';
         });
-
         // 失败弹窗确定按钮
         document.getElementById('failOkBtn').addEventListener('click', function() {
             document.getElementById('customFailModal').style.display = 'none';
         });
-
         // 确认弹窗确定按钮
         document.getElementById('confirmOkBtn').addEventListener('click', function() {
             document.getElementById('customConfirmModal').style.display = 'none';
         });
-
         // 确认弹窗取消按钮
         document.getElementById('confirmCancelBtn').addEventListener('click', function() {
             document.getElementById('customConfirmModal').style.display = 'none';
         });
-
         // 关闭修改密码模态框
         document.getElementById('closeChangePasswordModal').addEventListener('click', function() {
             document.getElementById('changeAdminPasswordModal').style.display = 'none';
         });
+
+        // 退出登录功能
+        document.getElementById('logoutLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            logout();
+        });
+        function logout() {
+            isAdminLoggedIn = false;
+            currentAdminUser = null;
+            localStorage.removeItem('currentAdminUser');
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('currentAdminUser').textContent = '';
+            showSuccessModal('已成功退出登录。');
+        }
     </script>
 </body>
 </html>
