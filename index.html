@@ -407,6 +407,8 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: var(--shadow);
+            max-height: 400px; /* 限制最大高度 */
+            overflow-y: auto; /* 启用垂直滚动 */
         }
         .log-item {
             padding: 10px 15px;
@@ -638,6 +640,17 @@
                 grid-template-columns: 1fr;
             }
         }
+        /* 留言分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 8px 16px;
+        }
     </style>
 </head>
 <body>
@@ -769,7 +782,10 @@
                     <form id="addAdminForm" class="add-admin-form">
                         <h4>创建新管理员账号</h4>
                         <div class="form-row">
-                            <input type="text" id="newAdminUsername" placeholder="输入新管理员用户名" required>
+                            <div class="form-group">
+                                <label for="newAdminUsername">用户名</label>
+                                <input type="text" id="newAdminUsername" placeholder="输入新管理员用户名" required>
+                            </div>
                             <button type="submit" class="btn"><i class="fas fa-plus"></i> 新增</button>
                         </div>
                         <p style="font-size: 0.9rem; color: var(--gray); margin-top: 10px;">
@@ -798,8 +814,14 @@
                     <h3><i class="fas fa-key"></i> 修改密码</h3>
                     <form id="changePasswordForm" class="add-admin-form">
                         <div class="form-row">
-                            <input type="password" id="oldPassword" placeholder="旧密码" required>
-                            <input type="password" id="newPassword" placeholder="新密码 (至少6位)" required>
+                            <div class="form-group">
+                                <label for="oldPassword">旧密码</label>
+                                <input type="password" id="oldPassword" placeholder="旧密码" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">新密码</label>
+                                <input type="password" id="newPassword" placeholder="新密码 (至少6位)" required>
+                            </div>
                             <button type="submit" class="btn"><i class="fas fa-save"></i> 保存</button>
                         </div>
                     </form>
@@ -813,7 +835,9 @@
                             <option value="unread">未读</option>
                             <option value="read">已读</option>
                         </select>
-                        <input type="text" id="messageSearch" placeholder="搜索留言...">
+                        <div class="form-group">
+                            <input type="text" id="messageSearch" placeholder="搜索留言...">
+                        </div>
                         <button class="btn" onclick="filterMessages()"><i class="fas fa-search"></i> 搜索</button>
                     </div>
                     <table class="message-table" id="messagesTable">
@@ -831,6 +855,12 @@
                             <!-- 留言列表将通过 JavaScript 动态加载 -->
                         </tbody>
                     </table>
+                    <!-- 留言分页 -->
+                    <div class="pagination">
+                        <button id="prevPageBtn" class="btn" disabled><i class="fas fa-chevron-left"></i> 上一页</button>
+                        <span id="pageInfo">第 1 页，共 1 页</span>
+                        <button id="nextPageBtn" class="btn"><i class="fas fa-chevron-right"></i> 下一页</button>
+                    </div>
                 </div>
                 <!-- 系统日志 -->
                 <div class="settings-section">
@@ -1108,27 +1138,34 @@
                 }
             }, 500);
         });
-
         // 退出登录功能
         document.getElementById('logoutLink').addEventListener('click', function(e) {
             e.preventDefault();
-            if (confirm('确定要退出登录吗？')) {
-                // 清除登录状态
-                isAdminLoggedIn = false;
-                currentAdminUser = null;
-                localStorage.removeItem('currentAdminUser');
-                // 隐藏面板，显示登录界面
-                document.getElementById('adminPanel').style.display = 'none';
-                document.getElementById('loginSection').style.display = 'block';
-                // 清空表单
-                document.getElementById('adminLogin').reset();
-                // 清除日志显示
-                document.getElementById('logsContainer').innerHTML = '';
-                // 重新加载页面以刷新所有数据
-                location.reload();
-            }
+            showConfirmModal(
+                '确认退出',
+                '确定要退出登录吗？',
+                function() {
+                    // 用户确认退出
+                    // 清除登录状态
+                    isAdminLoggedIn = false;
+                    currentAdminUser = null;
+                    localStorage.removeItem('currentAdminUser');
+                    // 隐藏面板，显示登录界面
+                    document.getElementById('adminPanel').style.display = 'none';
+                    document.getElementById('loginSection').style.display = 'block';
+                    // 清空表单
+                    document.getElementById('adminLogin').reset();
+                    // 清除日志显示
+                    document.getElementById('logsContainer').innerHTML = '';
+                    // 重新加载页面以刷新所有数据
+                    location.reload();
+                },
+                function() {
+                    // 用户取消退出
+                    showSuccessModal('已取消退出操作。');
+                }
+            );
         });
-
         // 更新统计信息
         function updateStats() {
             // 优先使用全局变量
@@ -1139,7 +1176,6 @@
             const unreadCount = messagesData.filter(msg => !msg.read).length;
             document.getElementById('unreadMessages').textContent = unreadCount;
         }
-
         // 初始化设置面板 UI
         function initializeSettingsPanel() {
             console.log("🔧 开始初始化设置面板 UI...");
@@ -1164,7 +1200,6 @@
                     passwordInput.value = pagePasswords[id] || '';
                     // 控制显示
                     toggleInputs(id, pageConfig.status);
-
                     let statusText = pageConfig.status;
                     if (pageConfig.status === 'limit') {
                         statusText += ` (${pageConfig.duration || 10}秒)`;
@@ -1175,7 +1210,6 @@
                 }
             });
         }
-
         // 控制页面状态输入框显示
         function toggleInputs(pageId, status) {
             const durationGroup = document.getElementById(`${pageId}DurationGroup`);
@@ -1191,7 +1225,6 @@
                 passwordGroup.style.display = 'none';
             }
         }
-
         // 页面状态改变时调用
         function toggleProductInputs() {
             const status = document.getElementById('productsStatus').value;
@@ -1205,7 +1238,6 @@
             const status = document.getElementById('contactStatus').value;
             toggleInputs('contact', status);
         }
-
         // 应用页面状态设置
         function applyPageStatus(pageId) {
             // 修复：优先使用全局变量
@@ -1252,7 +1284,6 @@
                 console.error('同步配置失败:', error);
             });
         }
-
         // 创建新管理员账号
         document.getElementById('addAdminForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1308,7 +1339,6 @@
                 loadAdminList();
             });
         });
-
         // 加载并显示管理员列表
         function loadAdminList() {
             const accounts = window.adminAccounts || adminAccounts;
@@ -1366,7 +1396,6 @@
                 listBody.appendChild(row);
             });
         }
-
         // 显示修改特定管理员密码的模态框
         let targetAdminForPasswordChange = null;
         function showChangePasswordModal(username) {
@@ -1375,7 +1404,6 @@
             document.getElementById('newAdminPassword').value = '';
             document.getElementById('changeAdminPasswordModal').style.display = 'flex';
         }
-
         // 修改管理员密码
         document.getElementById('changeAdminPasswordForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1419,7 +1447,6 @@
                 loadAdminList();
             });
         });
-
         // 删除管理员
         function deleteAdmin(username) {
             if (!isAdminLoggedIn || username === 'admin') {
@@ -1466,7 +1493,6 @@
                 }
             );
         }
-
         // 修改当前登录管理员的密码
         document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1518,25 +1544,47 @@
                 newPasswordInput.value = '';
             });
         });
-
-        // 加载并显示留言列表 - 修复：最新的在上
+        // --- 修改：加载并显示留言列表 - 增加分页 ---
         function loadMessages() {
             const messagesData = window.messages || messages;
             const messagesBody = document.getElementById('messagesBody');
             if (!messagesBody) return;
+
+            // --- 分页逻辑 ---
+            const pageSize = 5; // 每页显示5条
+            let currentPage = parseInt(localStorage.getItem('messagesCurrentPage') || '1');
+            const totalPages = Math.ceil(messagesData.length / pageSize);
+
+            // 确保页码在有效范围内
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            // 更新本地存储
+            localStorage.setItem('messagesCurrentPage', currentPage.toString());
+
+            // 更新分页控件
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+            document.getElementById('pageInfo').textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+
+            // --- 过滤和排序 ---
             messagesBody.innerHTML = '';
-            // 修复：最新的在上
             const sortedMessages = [...messagesData].reverse();
             const filterValue = document.getElementById('messageStatusFilter').value;
             let filteredMessages = sortedMessages;
-
             if (filterValue === 'unread') {
                 filteredMessages = sortedMessages.filter(msg => !msg.read);
             } else if (filterValue === 'read') {
                 filteredMessages = sortedMessages.filter(msg => msg.read);
             }
 
-            filteredMessages.forEach((message, index) => {
+            // --- 分页计算 ---
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageMessages = filteredMessages.slice(startIndex, endIndex);
+
+            // --- 渲染当前页 ---
+            pageMessages.forEach((message, index) => {
                 const row = document.createElement('tr');
                 const statusClass = message.read ? 'status-read' : 'status-unread';
                 const statusText = message.read ? '已读' : '未读';
@@ -1547,14 +1595,13 @@
                     <td>${message.timestamp}</td>
                     <td><span class="read-status ${statusClass}">${statusText}</span></td>
                     <td>
-                        <button class="action-btn" onclick="markAsRead(${index})">标为已读</button>
-                        <button class="action-btn delete-btn" onclick="deleteMessage(${index})">删除</button>
+                        <button class="action-btn" onclick="markAsRead(${sortedMessages.indexOf(message)})">标为已读</button>
+                        <button class="action-btn delete-btn" onclick="deleteMessage(${sortedMessages.indexOf(message)})">删除</button>
                     </td>
                 `;
                 messagesBody.appendChild(row);
             });
         }
-
         // 标记留言为已读
         function markAsRead(index) {
             const messagesData = window.messages || messages;
@@ -1582,7 +1629,6 @@
                 showSuccessModal('留言已标为已读。');
             }
         }
-
         // 删除留言
         function deleteMessage(index) {
             // 使用自定义确认弹窗
@@ -1623,7 +1669,6 @@
                 }
             );
         }
-
         // 搜索留言
         function filterMessages() {
             const searchTerm = document.getElementById('messageSearch').value.toLowerCase();
@@ -1635,19 +1680,16 @@
             const sortedMessages = [...messagesData].reverse();
             const filterValue = document.getElementById('messageStatusFilter').value;
             let filteredMessages = sortedMessages;
-
             if (filterValue === 'unread') {
                 filteredMessages = sortedMessages.filter(msg => !msg.read);
             } else if (filterValue === 'read') {
                 filteredMessages = sortedMessages.filter(msg => msg.read);
             }
-
             filteredMessages = filteredMessages.filter(message =>
                 message.name.toLowerCase().includes(searchTerm) ||
                 message.phone.includes(searchTerm) ||
                 message.message.toLowerCase().includes(searchTerm)
             );
-
             filteredMessages.forEach((message, index) => {
                 const row = document.createElement('tr');
                 const statusClass = message.read ? 'status-read' : 'status-unread';
@@ -1666,8 +1708,7 @@
                 messagesBody.appendChild(row);
             });
         }
-
-        // 加载并显示系统日志 - 修复：时间筛选和错误处理
+        // --- 修改：加载并显示系统日志 - 修复时间筛选和错误处理 ---
         function loadLogs() {
             const logsData = window.logs || logs;
             const logsContainer = document.getElementById('logsContainer');
@@ -1675,13 +1716,11 @@
             logsContainer.innerHTML = '';
             const filterValue = document.getElementById('logTimeFilter').value;
             let filteredLogs = logsData;
-
             if (filterValue !== 'all') {
                 const now = new Date();
                 const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
                 const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
                 const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString().split('T')[0];
-
                 filteredLogs = logsData.filter(log => {
                     // 修复：增加时间有效性检查
                     const logDate = new Date(log.time);
@@ -1702,14 +1741,17 @@
                     }
                 });
             }
-
             // 修复：最新的在上
             filteredLogs.slice().reverse().forEach(log => {
                 const logItem = document.createElement('div');
                 logItem.className = 'log-item';
+                // --- 修复：增加时间有效性检查 ---
+                const timeDisplay = log.time ? new Date(log.time) : new Date();
+                const validTime = isNaN(timeDisplay.getTime()) ? '未知时间' : timeDisplay.toLocaleString();
+                // --- 结束修复 ---
                 logItem.innerHTML = `
                     <div>
-                        <div class="log-time">${log.time}</div>
+                        <div class="log-time">${validTime}</div>
                         <div class="log-action">${log.action}</div>
                     </div>
                     <div class="log-details">${log.details}</div>
@@ -1717,7 +1759,6 @@
                 logsContainer.appendChild(logItem);
             });
         }
-
         // 添加日志
         function addLog(action, details) {
             const logEntry = {
@@ -1736,7 +1777,6 @@
             // 更新显示
             loadLogs();
         }
-
         // 初始化流量图
         function initTrafficChart() {
             const chartContainer = document.getElementById('trafficChart');
@@ -1768,7 +1808,6 @@
                 chartContainer.appendChild(barContainer);
             });
         }
-
         // 从 OSS 加载配置并初始化设置面板
         async function loadConfigFromOSSAndInitializeSettingsPanel() {
             console.log("🔄 开始从阿里云 OSS 加载配置...");
@@ -1920,7 +1959,6 @@
                 return false;
             }
         }
-
         // 关闭弹窗事件
         document.querySelectorAll('.close').forEach(closeBtn => {
             closeBtn.addEventListener('click', function() {
@@ -1930,7 +1968,6 @@
                 }
             });
         });
-
         // 点击弹窗外部关闭
         document.querySelectorAll('.custom-modal, .modal').forEach(modal => {
             modal.addEventListener('click', function(e) {
@@ -1939,30 +1976,42 @@
                 }
             });
         });
-
         // 成功弹窗确定按钮
         document.getElementById('successOkBtn').addEventListener('click', function() {
             document.getElementById('customSuccessModal').style.display = 'none';
         });
-
         // 失败弹窗确定按钮
         document.getElementById('failOkBtn').addEventListener('click', function() {
             document.getElementById('customFailModal').style.display = 'none';
         });
-
         // 确认弹窗确定按钮
         document.getElementById('confirmOkBtn').addEventListener('click', function() {
             document.getElementById('customConfirmModal').style.display = 'none';
         });
-
         // 确认弹窗取消按钮
         document.getElementById('confirmCancelBtn').addEventListener('click', function() {
             document.getElementById('customConfirmModal').style.display = 'none';
         });
-
         // 关闭修改密码模态框
         document.getElementById('closeChangePasswordModal').addEventListener('click', function() {
             document.getElementById('changeAdminPasswordModal').style.display = 'none';
+        });
+        // --- 新增：分页按钮事件 ---
+        document.getElementById('prevPageBtn').addEventListener('click', function() {
+            const currentPage = parseInt(localStorage.getItem('messagesCurrentPage') || '1');
+            if (currentPage > 1) {
+                localStorage.setItem('messagesCurrentPage', (currentPage - 1).toString());
+                loadMessages();
+            }
+        });
+
+        document.getElementById('nextPageBtn').addEventListener('click', function() {
+            const currentPage = parseInt(localStorage.getItem('messagesCurrentPage') || '1');
+            const totalPages = Math.ceil((window.messages || messages).length / 5);
+            if (currentPage < totalPages) {
+                localStorage.setItem('messagesCurrentPage', (currentPage + 1).toString());
+                loadMessages();
+            }
         });
     </script>
 </body>
