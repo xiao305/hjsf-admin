@@ -107,7 +107,7 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
-            font-family: inherit; /* 继承父级字体 */
+            font-family: inherit;
         }
         /* 内容容器 */
         .container {
@@ -405,6 +405,8 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: var(--shadow);
+            max-height: 300px;
+            overflow-y: auto;
         }
         .log-item {
             padding: 10px 15px;
@@ -709,11 +711,11 @@
                                 <option value="limit">限制访问</option>
                                 <option value="closed">关闭</option>
                             </select>
-                            <div id="productsDurationContainer" class="setting-row-container" style="display: none;">
+                            <div id="productsDurationContainer" class="setting-row-container">
                                 <label>秒数:</label>
                                 <input type="number" id="productsDuration" class="form-control" placeholder="限制秒数" min="1">
                             </div>
-                            <div id="productsPasswordContainer" class="setting-row-container" style="display: none;">
+                            <div id="productsPasswordContainer" class="setting-row-container">
                                 <label>密码:</label>
                                 <input type="text" id="productsPassword" class="form-control" placeholder="关闭密码">
                             </div>
@@ -731,11 +733,11 @@
                                 <option value="limit">限制访问</option>
                                 <option value="closed">关闭</option>
                             </select>
-                            <div id="aboutDurationContainer" class="setting-row-container" style="display: none;">
+                            <div id="aboutDurationContainer" class="setting-row-container">
                                 <label>秒数:</label>
                                 <input type="number" id="aboutDuration" class="form-control" placeholder="限制秒数" min="1">
                             </div>
-                            <div id="aboutPasswordContainer" class="setting-row-container" style="display: none;">
+                            <div id="aboutPasswordContainer" class="setting-row-container">
                                 <label>密码:</label>
                                 <input type="text" id="aboutPassword" class="form-control" placeholder="关闭密码">
                             </div>
@@ -753,11 +755,11 @@
                                 <option value="limit">限制访问</option>
                                 <option value="closed">关闭</option>
                             </select>
-                            <div id="contactDurationContainer" class="setting-row-container" style="display: none;">
+                            <div id="contactDurationContainer" class="setting-row-container">
                                 <label>秒数:</label>
                                 <input type="number" id="contactDuration" class="form-control" placeholder="限制秒数" min="1">
                             </div>
-                            <div id="contactPasswordContainer" class="setting-row-container" style="display: none;">
+                            <div id="contactPasswordContainer" class="setting-row-container">
                                 <label>密码:</label>
                                 <input type="text" id="contactPassword" class="form-control" placeholder="关闭密码">
                             </div>
@@ -801,7 +803,7 @@
                 <div class="settings-section">
                     <h3><i class="fas fa-key"></i> 修改密码</h3>
                     <form id="changePasswordForm" class="add-admin-form">
-                        <div class="form-row">
+                        <div class="form-row" style="align-items: center; gap: 10px;">
                             <input type="password" id="oldPassword" class="form-control" placeholder="旧密码" required>
                             <input type="password" id="newPassword" class="form-control" placeholder="新密码 (至少6位)" required>
                             <button type="submit" class="btn"><i class="fas fa-save"></i> 保存</button>
@@ -820,21 +822,23 @@
                         <input type="text" id="messageSearch" class="form-control" placeholder="搜索留言...">
                         <button class="btn" onclick="filterMessages()"><i class="fas fa-search"></i> 搜索</button>
                     </div>
-                    <table class="message-table" id="messagesTable">
-                        <thead>
-                            <tr>
-                                <th>姓名</th>
-                                <th>电话</th>
-                                <th>留言内容</th>
-                                <th>时间</th>
-                                <th>状态</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="messagesBody">
-                            <!-- 留言列表将通过 JavaScript 动态加载 -->
-                        </tbody>
-                    </table>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="message-table" id="messagesTable">
+                            <thead>
+                                <tr>
+                                    <th>姓名</th>
+                                    <th>电话</th>
+                                    <th>留言内容</th>
+                                    <th>时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="messagesBody">
+                                <!-- 留言列表将通过 JavaScript 动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <!-- 系统日志 -->
                 <div class="settings-section">
