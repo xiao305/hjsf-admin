@@ -8,8 +8,6 @@
     <base href="https://admin.hjsf.uno/">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 修复：添加隐藏类 */
-        .hidden {display: none;}
         /* 优化后的样式系统 */
         :root {
             --primary: #e4393c;
@@ -514,29 +512,6 @@
         .modal-buttons .btn {
             flex: 1;
         }
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .nav-container {
-                flex-direction: column;
-                gap: 15px;
-            }
-            .nav-links {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            .setting-row {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .setting-row input,
-            .setting-row select,
-            .setting-row button {
-                width: 100%;
-            }
-            .admin-stats {
-                grid-template-columns: 1fr;
-            }
-        }
         /* 自定义弹窗样式 */
         .custom-modal {
           position: fixed;
@@ -636,6 +611,30 @@
             background: #fdf2f2;
             border-radius: 6px;
             border-top: 1px solid #fee2e2;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .setting-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .setting-row input,
+            .setting-row select,
+            .setting-row button {
+                width: 100%;
+            }
+            .admin-stats {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -1038,43 +1037,48 @@
             document.getElementById('customLoadingModal').style.display = 'none';
         }
 
-        // --- 新增：关闭所有弹窗 ---
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
         // --- 新增：初始化页面 ---
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化设置面板 UI
-            initializeSettingsPanel();
+            console.log("🔧 页面DOM加载完成，开始初始化...");
             
-            // 更新统计信息
-            updateStats();
-            
-            // 加载管理员列表
-            loadAdminList();
-            
-            // 加载留言列表
-            loadMessages();
-            
-            // 加载日志
-            loadLogs();
-            
-            // 初始化流量图
-            initTrafficChart();
-            
-            // 检查是否已登录
-            const savedUser = localStorage.getItem('currentAdminUser');
-            if (savedUser) {
-                // 模拟自动登录（实际上应该从本地存储恢复状态）
-                // 为了演示，这里简单处理
-                if (true) { // 假设已登录
-                    // 显示面板
-                    document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('adminPanel').style.display = 'block';
-                    document.getElementById('currentAdminUser').textContent = `当前用户: ${savedUser}`;
+            // 确保所有元素都已加载后再执行
+            setTimeout(() => {
+                // 初始化设置面板 UI
+                initializeSettingsPanel();
+                
+                // 更新统计信息
+                updateStats();
+                
+                // 加载管理员列表
+                loadAdminList();
+                
+                // 加载留言列表
+                loadMessages();
+                
+                // 加载日志
+                loadLogs();
+                
+                // 初始化流量图
+                initTrafficChart();
+                
+                // 检查是否已登录
+                const savedUser = localStorage.getItem('currentAdminUser');
+                if (savedUser) {
+                    // 模拟自动登录（实际上应该从本地存储恢复状态）
+                    // 为了演示，这里简单处理
+                    if (true) { // 假设已登录
+                        // 显示面板
+                        document.getElementById('loginSection').style.display = 'none';
+                        document.getElementById('adminPanel').style.display = 'block';
+                        document.getElementById('currentAdminUser').textContent = `当前用户: ${savedUser}`;
+                    }
                 }
-            }
+                
+                // 加载OSS配置
+                loadConfigFromOSSAndInitializeSettingsPanel();
+                
+                console.log("✅ 页面初始化完成");
+            }, 100);
         });
 
         // 登录功能
@@ -1086,15 +1090,19 @@
             // 显示加载弹窗
             showLoadingModal('正在验证登录信息...');
             
-            // 延迟模拟网络请求
+            // 延迟确保OSS配置加载完成
             setTimeout(() => {
-                // 修复：优先使用从 OSS 加载的全局变量
+                // 修复：优先使用从 OSS 加载的全局 adminAccounts，回退到局部变量
                 const accountsToUse = window.adminAccounts || adminAccounts;
                 
                 console.log("登录验证时使用的账号列表 (accountsToUse):", accountsToUse);
+                console.log("验证用户名:", username);
+                console.log("验证密码:", password);
                 
                 const storedHash = accountsToUse[username];
-                if (storedHash && storedHash === btoa(password)) {
+                console.log("存储的密码哈希:", storedHash);
+                
+                if(storedHash && storedHash === btoa(password)) {
                     isAdminLoggedIn = true;
                     currentAdminUser = username;
                     
@@ -1130,24 +1138,7 @@
             }, 500);
         });
 
-        // 退出登录
-        document.getElementById('logoutBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            isAdminLoggedIn = false;
-            currentAdminUser = null;
-            localStorage.removeItem('currentAdminUser');
-            
-            document.getElementById('loginSection').style.display = 'block';
-            document.getElementById('adminPanel').style.display = 'none';
-            document.getElementById('currentAdminUser').textContent = '';
-            document.getElementById('adminLogin').reset();
-            addLog('退出登录', '管理员退出了系统');
-            
-            // 显示成功弹窗
-            showSuccessModal('已成功退出登录。');
-        });
-
-        // 更新统计信息 - 确保使用正确的数据源
+        // 更新统计信息
         function updateStats() {
             // 优先使用全局变量
             const totalVisits = window.visits?.total || visits.total || 0;
@@ -1165,17 +1156,6 @@
             // 修复：优先使用从 OSS 加载的全局配置
             const config = window.pageStatusConfig || pageStatusConfig;
             const passwords = window.pagePasswords || pagePasswords;
-            
-            // 修复：优先使用从 OSS 加载的全局管理员账号
-            const accounts = window.adminAccounts || adminAccounts;
-            
-            // 修复：优先使用从 OSS 加载的全局留言和访问量
-            const messagesData = window.messages || messages;
-            const visitsData = window.visits || visits;
-            
-            console.log("🔧 使用的配置:", config);
-            console.log("🔧 使用的密码:", passwords);
-            console.log("🔧 使用的管理员账号:", accounts);
             
             // 设置页面状态
             const pageSettings = [
@@ -1791,134 +1771,131 @@
         }
 
         // 从 OSS 加载配置并初始化设置面板
-        function loadConfigFromOSSAndInitializeSettingsPanel() {
-            // 替换为您的实际 OSS Bucket 名称和地域
-            const OSS_BUCKET_NAME = "xiao-config-bucket"; // <--- 请修改为您的 Bucket 名称
-            const REGION = "oss-cn-hangzhou"; // <--- 请修改为您的 Bucket 所在地域
-            // 注意：确保您的 Bucket 是公共读权限
-            const OSS_CONFIG_URL = `https://${OSS_BUCKET_NAME}.${REGION}.aliyuncs.com/test-config.json?${new Date().getTime()}`; // <--- 修改为您的实际文件名, 添加时间戳防缓存
+        async function loadConfigFromOSSAndInitializeSettingsPanel() {
+            console.log("🔄 开始从阿里云 OSS 加载配置...");
             
-            console.log("开始尝试从 OSS 读取配置...");
+            // 确保显示加载状态
+            if (typeof showLoadingModal !== 'undefined') {
+                showLoadingModal("正在从云端加载配置...");
+            }
             
-            fetch(OSS_CONFIG_URL, { cache: 'no-store' }) // 禁用缓存确保拿到最新
-                .then(async response => { // 使用 async/await 处理
-                    console.log("Fetch 响应对象:", response); // 调试日志
-                    
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            console.log("OSS: 配置文件未找到");
-                            return null; // 文件不存在
+            try {
+                // 使用正确的OSS地址
+                const OSS_BUCKET_NAME = "xiao-config-bucket"; // <--- 请修改为您的实际 Bucket 名称
+                const REGION = "oss-cn-hangzhou"; // <--- 请修改为您的实际 Bucket 所在地域
+                const OSS_CONFIG_URL = `https://${OSS_BUCKET_NAME}.${REGION}.aliyuncs.com/test-config.json?${new Date().getTime()}`; // <--- 修改为您的实际文件名
+                
+                console.log("尝试访问OSS配置:", OSS_CONFIG_URL);
+                
+                const response = await fetch(OSS_CONFIG_URL, {
+                    cache: 'no-store',
+                    mode: 'cors'
+                });
+                
+                console.log("Fetch 响应对象:", response);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.log("OSS: 配置文件未找到，使用本地默认配置");
+                        // 使用本地默认配置
+                        initializeSettingsPanel();
+                        if (typeof hideLoadingModal !== 'undefined') {
+                            hideLoadingModal();
                         }
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        return true;
                     }
-                    
-                    // --- 关键修改：检查 Content-Type 并安全读取响应体 ---
-                    const contentType = response.headers.get('content-type');
-                    console.log("OSS: 响应 Content-Type:", contentType);
-                    let data = null;
-                    
-                    if (contentType && contentType.includes('application/json')) {
-                        // 如果是 JSON 类型，尝试解析
-                        console.log("OSS: 响应体是 JSON 类型，尝试解析...");
-                        try {
-                            data = await response.json(); // 使用 await 等待解析
-                            console.log("OSS: 成功解析 JSON 响应体:", data);
-                        } catch (parseError) {
-                            console.error("OSS: 解析 JSON 响应体失败:", parseError);
-                            // 即使 Content-Type 声称为 JSON，解析也可能失败
-                            // 我们可以尝试读取文本内容看看实际是什么
-                            const textContent = await response.text();
-                            console.log("OSS: 实际响应体文本内容:", textContent);
-                            data = null; // 解析失败，设置为 null
-                        }
-                    } else {
-                        // 如果不是 JSON 类型，或者没有 Content-Type，读取文本
-                        console.log("OSS: 响应体不是 JSON 类型，读取文本内容...");
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // 检查响应内容类型
+                const contentType = response.headers.get('content-type');
+                console.log("OSS: 响应 Content-Type:", contentType);
+                
+                let data = null;
+                if (contentType && contentType.includes('application/json')) {
+                    console.log("OSS: 响应体是 JSON 类型，尝试解析...");
+                    try {
+                        data = await response.json();
+                        console.log("✅ 成功解析 JSON 响应体:", data);
+                    } catch (parseError) {
+                        console.error("OSS: 解析 JSON 响应体失败:", parseError);
+                        // 尝试读取文本内容
                         const textContent = await response.text();
-                        console.log("OSS: 响应体文本内容:", textContent);
-                        // 尝试将文本内容解析为 JSON
+                        console.log("OSS: 文本响应内容:", textContent);
                         try {
                             data = JSON.parse(textContent);
-                            console.log("OSS: 成功将文本内容解析为 JSON:", data);
-                        } catch (parseError) {
-                            console.error("OSS: 将文本内容解析为 JSON 失败:", parseError);
-                            data = null; // 解析失败，设置为 null
+                            console.log("✅ 从文本内容成功解析为 JSON");
+                        } catch (secondParseError) {
+                            console.error("OSS: 从文本内容解析失败:", secondParseError);
+                            throw new Error("无法解析响应内容");
                         }
                     }
-                    return data; // 返回解析后的数据或 null
-                    // --- 结束关键修改 ---
-                })
-                .then(data => {
-                    if (data && data.pageStatusConfig) {
-                        console.log("✅ 成功从 OSS 读取到配置:", data);
-                        // --- 关键修改：更新所有从 OSS 读取的管理员数据到全局变量 ---
-                        // 更新全局配置变量
-                        window.pageStatusConfig = data.pageStatusConfig;
-                        window.pagePasswords = data.pagePasswords || {};
-                        window.adminAccounts = data.adminAccounts || {};
-                        window.messages = data.messages || [];
-                        window.logs = data.adminLogs || [];
-                        window.visits = data.siteVisits || { total: 0, daily: {} };
-                        
-                        console.log("📊 访问量数据:", window.visits);
-                        console.log("💬 留言数据:", window.messages);
-                        console.log("👥 管理员账号:", window.adminAccounts);
-                        console.log("🔄 已更新所有全局配置和数据变量");
-                        
-                        // 初始化设置面板 UI
-                        initializeSettingsPanel();
-                        
-                        // 更新统计信息
-                        updateStats();
-                        
-                        // 加载管理员列表
-                        loadAdminList();
-                        
-                        // 加载留言列表
-                        loadMessages();
-                        
-                        // 加载日志
-                        loadLogs();
-                        
-                        // 初始化流量图
-                        initTrafficChart();
-                        
-                        // 保存到本地存储
-                        localStorage.setItem('pageStatusConfig', JSON.stringify(window.pageStatusConfig));
-                        localStorage.setItem('pagePasswords', JSON.stringify(window.pagePasswords));
-                        localStorage.setItem('adminAccounts', JSON.stringify(window.adminAccounts));
-                        localStorage.setItem('messages', JSON.stringify(window.messages));
-                        localStorage.setItem('adminLogs', JSON.stringify(window.logs));
-                        localStorage.setItem('siteVisits', JSON.stringify(window.visits));
-                        
-                        console.log("💾 已保存所有配置到本地存储");
-                    } else {
-                        console.log("OSS: 远程配置为空或格式不正确");
-                        // 回退到 localStorage
-                        window.pageStatusConfig = JSON.parse(localStorage.getItem('pageStatusConfig')) || {
-                            products: { status: 'limit', duration: 10 },
-                            about: { status: 'limit', duration: 10 },
-                            contact: { status: 'limit', duration: 10 }
-                        };
-                        window.pagePasswords = JSON.parse(localStorage.getItem('pagePasswords')) || {
-                            products: '',
-                            about: '',
-                            contact: ''
-                        };
-                        window.adminAccounts = JSON.parse(localStorage.getItem('adminAccounts')) || {'admin': btoa('hongjie123')};
-                        window.messages = JSON.parse(localStorage.getItem('messages')) || [];
-                        window.logs = JSON.parse(localStorage.getItem('adminLogs')) || [];
-                        window.visits = JSON.parse(localStorage.getItem('siteVisits')) || { total: 0, daily: {} };
-                        
-                        console.log("🔙 回退到使用 localStorage 配置");
-                        
-                        // 初始化设置面板 UI
-                        initializeSettingsPanel();
+                } else {
+                    // 不是JSON类型，尝试读取文本
+                    console.log("OSS: 响应体不是 JSON 类型，读取文本内容...");
+                    const textContent = await response.text();
+                    console.log("OSS: 文本响应内容:", textContent);
+                    // 尝试将文本内容解析为 JSON
+                    try {
+                        data = JSON.parse(textContent);
+                        console.log("✅ 从文本内容成功解析为 JSON");
+                    } catch (parseError) {
+                        console.error("OSS: 将文本内容解析为 JSON 失败:", parseError);
+                        throw new Error("响应内容不是有效的JSON格式");
                     }
-                })
-                .catch(error => {
-                    console.error("❌ 从 OSS 读取配置失败:", error);
-                    // 回退到 localStorage
+                }
+                
+                if (data && data.pageStatusConfig) {
+                    console.log("✅ 成功从 OSS 读取到配置:", data);
+                    
+                    // 更新全局配置变量
+                    window.pageStatusConfig = data.pageStatusConfig;
+                    window.pagePasswords = data.pagePasswords || {};
+                    window.adminAccounts = data.adminAccounts || {};
+                    window.messages = data.messages || [];
+                    window.logs = data.adminLogs || [];
+                    window.visits = data.siteVisits || { total: 0, daily: {} };
+                    
+                    console.log("📊 访问量数据:", window.visits);
+                    console.log("💬 留言数据:", window.messages);
+                    console.log("👥 管理员账号:", window.adminAccounts);
+                    console.log("🔄 已更新所有全局配置和数据变量");
+                    
+                    // 初始化设置面板 UI
+                    initializeSettingsPanel();
+                    
+                    // 更新统计信息
+                    updateStats();
+                    
+                    // 加载管理员列表
+                    loadAdminList();
+                    
+                    // 加载留言列表
+                    loadMessages();
+                    
+                    // 加载日志
+                    loadLogs();
+                    
+                    // 初始化流量图
+                    initTrafficChart();
+                    
+                    // 保存到本地存储
+                    localStorage.setItem('pageStatusConfig', JSON.stringify(window.pageStatusConfig));
+                    localStorage.setItem('pagePasswords', JSON.stringify(window.pagePasswords));
+                    localStorage.setItem('adminAccounts', JSON.stringify(window.adminAccounts));
+                    localStorage.setItem('messages', JSON.stringify(window.messages));
+                    localStorage.setItem('adminLogs', JSON.stringify(window.logs));
+                    localStorage.setItem('siteVisits', JSON.stringify(window.visits));
+                    
+                    console.log("💾 已保存所有配置到本地存储");
+                    
+                    if (typeof hideLoadingModal !== 'undefined') {
+                        hideLoadingModal();
+                    }
+                    return true;
+                } else {
+                    console.log("OSS: 远程配置为空或格式不正确，使用本地默认配置");
+                    // 回退到本地存储
                     window.pageStatusConfig = JSON.parse(localStorage.getItem('pageStatusConfig')) || {
                         products: { status: 'limit', duration: 10 },
                         about: { status: 'limit', duration: 10 },
@@ -1934,11 +1911,37 @@
                     window.logs = JSON.parse(localStorage.getItem('adminLogs')) || [];
                     window.visits = JSON.parse(localStorage.getItem('siteVisits')) || { total: 0, daily: {} };
                     
-                    console.log("🔙 回退到使用 localStorage 配置 (因错误)");
-                    
-                    // 初始化设置面板 UI
                     initializeSettingsPanel();
-                });
+                    if (typeof hideLoadingModal !== 'undefined') {
+                        hideLoadingModal();
+                    }
+                    return false;
+                }
+            } catch (error) {
+                console.error("❌ 从 OSS 读取配置失败:", error);
+                // 回退到本地存储
+                window.pageStatusConfig = JSON.parse(localStorage.getItem('pageStatusConfig')) || {
+                    products: { status: 'limit', duration: 10 },
+                    about: { status: 'limit', duration: 10 },
+                    contact: { status: 'limit', duration: 10 }
+                };
+                window.pagePasswords = JSON.parse(localStorage.getItem('pagePasswords')) || {
+                    products: '',
+                    about: '',
+                    contact: ''
+                };
+                window.adminAccounts = JSON.parse(localStorage.getItem('adminAccounts')) || {'admin': btoa('hongjie123')};
+                window.messages = JSON.parse(localStorage.getItem('messages')) || [];
+                window.logs = JSON.parse(localStorage.getItem('adminLogs')) || [];
+                window.visits = JSON.parse(localStorage.getItem('siteVisits')) || { total: 0, daily: {} };
+                
+                console.log("🔙 回退到使用 localStorage 配置 (因错误)");
+                initializeSettingsPanel();
+                if (typeof hideLoadingModal !== 'undefined') {
+                    hideLoadingModal();
+                }
+                return false;
+            }
         }
 
         // 关闭弹窗事件
@@ -1952,7 +1955,7 @@
         });
 
         // 点击弹窗外部关闭
-        document.querySelectorAll('.modal, .custom-modal').forEach(modal => {
+        document.querySelectorAll('.custom-modal, .modal').forEach(modal => {
             modal.addEventListener('click', function(e) {
                 if (e.target === this) {
                     this.style.display = 'none';
