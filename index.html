@@ -1575,7 +1575,7 @@
                 newPasswordInput.value = '';
             });
         });
-        // --- 修改：加载并显示留言列表 - 增加分页 ---
+        // --- 修复：加载并显示留言列表 - 增加分页 ---
         function loadMessages() {
             const messagesData = window.messages || messages;
             const messagesBody = document.getElementById('messagesBody');
@@ -1652,7 +1652,7 @@
                 messagesBody.appendChild(row);
             });
         }
-        // --- 修改：标记留言为已读 ---
+        // --- 修复：标记留言为已读 ---
         function markAsRead(originalIndex) {
             const messagesData = window.messages || messages;
             if (originalIndex >= 0 && originalIndex < messagesData.length) {
@@ -1696,8 +1696,8 @@
                 showFailModal('操作失败', '无法定位到指定的留言。');
             }
         }
-        // 删除留言
-        function deleteMessage(index) {
+        // --- 修复：删除留言函数 ---
+        function deleteMessage(originalIndex) {
             // 使用自定义确认弹窗
             showConfirmModal(
                 '确认删除',
@@ -1705,11 +1705,11 @@
                 function() {
                     // 用户确认删除
                     const messagesData = window.messages || messages;
-                    if (index >= 0 && index < messagesData.length) {
+                    if (originalIndex >= 0 && originalIndex < messagesData.length) {
                         // 记录删除日志
-                        addLog('删除留言', `管理员 ${currentAdminUser} 删除了 ${messagesData[index].name} 的留言`);
+                        addLog('删除留言', `管理员 ${currentAdminUser} 删除了 ${messagesData[originalIndex].name} 的留言`);
                         // 从数组中删除，并更新全局变量
-                        messagesData.splice(index, 1);
+                        messagesData.splice(originalIndex, 1);
                         // 更新全局变量 (这是关键一步)
                         if (window.messages) {
                             window.messages = messagesData;
@@ -1736,7 +1736,7 @@
                 }
             );
         }
-        // 搜索留言
+        // --- 修复：搜索留言函数 ---
         function filterMessages() {
             const searchTerm = document.getElementById('messageSearch').value.toLowerCase();
             const messagesData = window.messages || messages;
@@ -1761,12 +1761,14 @@
                 const row = document.createElement('tr');
                 const statusClass = message.read ? 'status-read' : 'status-unread';
                 const statusText = message.read ? '已读' : '未读';
+                
                 // --- 关键修改：使用原始数组的索引 ---
                 const originalIndex = messagesData.findIndex(msg => msg === message); // 严格相等，适用于对象引用
                 if (originalIndex === -1) {
                     console.warn("警告：未能找到消息的原始索引", message);
                     return; // 跳过这个条目
                 }
+                
                 row.innerHTML = `
                     <td>${message.name}</td>
                     <td>${message.phone}</td>
@@ -1775,7 +1777,7 @@
                     <td><span class="read-status ${statusClass}">${statusText}</span></td>
                     <td>
                         ${
-                            message.read ? '' // 如果已读，则不显示“标为已读”按钮
+                            message.read ? '' // 如果已读，则不显示"标为已读"按钮
                             : `<button class="action-btn" onclick="markAsRead(${originalIndex})">标为已读</button>`
                         }
                         <button class="action-btn delete-btn" onclick="deleteMessage(${originalIndex})">删除</button>
