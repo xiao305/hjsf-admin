@@ -1575,7 +1575,7 @@
                 newPasswordInput.value = '';
             });
         });
-        // --- 修复：加载并显示留言列表 - 增加分页 ---
+        // --- 修改：加载并显示留言列表 - 增加分页 ---
         function loadMessages() {
             const messagesData = window.messages || messages;
             const messagesBody = document.getElementById('messagesBody');
@@ -1652,8 +1652,8 @@
                 messagesBody.appendChild(row);
             });
         }
-        // --- 修复：标记留言为已读 ---
-        async function markAsRead(originalIndex) {
+        // --- 修改：标记留言为已读 ---
+        function markAsRead(originalIndex) {
             const messagesData = window.messages || messages;
             if (originalIndex >= 0 && originalIndex < messagesData.length) {
                 const messageToMark = messagesData[originalIndex]; // 获取目标消息对象
@@ -1664,84 +1664,70 @@
                     loadMessages(); // 重新加载以反映UI更新
                     return;
                 }
-                // 显示加载弹窗
-                showLoadingModal('正在标记为已读...');
-                try {
-                    // 修改本地数据
-                    messageToMark.read = true;
-                    // 更新全局变量 (这是关键一步)
-                    if (window.messages) {
-                        window.messages[originalIndex].read = true;
-                    }
-                    // 记录日志
-                    addLog('标为已读', `管理员 ${currentAdminUser} 将 ${messageToMark.name} 的留言标为已读`);
-                    // 重新加载
-                    loadMessages(); // 重新加载以更新UI和分页
-                    updateStats(); // 更新统计信息
-                    // 同步到云端
-                    await syncConfigToFC({
-                        pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
-                        pagePasswords: window.pagePasswords || pagePasswords,
-                        adminAccounts: window.adminAccounts || adminAccounts,
-                        messages: window.messages || messages,
-                        adminLogs: window.logs || logs,
-                        siteVisits: window.visits || visits,
-                        timestamp: new Date().toISOString()
-                    });
-                    hideLoadingModal();
-                    showSuccessModal('留言已标为已读。');
-                } catch (error) {
-                    hideLoadingModal();
-                    console.error('标记已读失败:', error);
-                    showFailModal('操作失败', '标记已读操作失败，请重试');
+                // 修改本地数据
+                messageToMark.read = true;
+                // 更新全局变量 (这是关键一步)
+                if (window.messages) {
+                    window.messages[originalIndex].read = true;
                 }
+                // 记录日志
+                addLog('标为已读', `管理员 ${currentAdminUser} 将 ${messageToMark.name} 的留言标为已读`);
+                // 重新加载
+                loadMessages(); // 重新加载以更新UI和分页
+                updateStats(); // 更新统计信息
+                // 同步到云端
+                syncConfigToFC({
+                    pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
+                    pagePasswords: window.pagePasswords || pagePasswords,
+                    adminAccounts: window.adminAccounts || adminAccounts,
+                    messages: window.messages || messages,
+                    adminLogs: window.logs || logs,
+                    siteVisits: window.visits || visits,
+                    timestamp: new Date().toISOString()
+                }).then(() => {
+                    console.log("✅ 已同步标记已读操作到云端");
+                }).catch((error) => {
+                    console.error('❌ 同步标记已读失败:', error);
+                    // 可以选择不显示失败弹窗，因为本地已更改
+                });
+                showSuccessModal('留言已标为已读。');
             } else {
                 console.error("❌ markAsRead: 无效的原始索引", originalIndex);
                 showFailModal('操作失败', '无法定位到指定的留言。');
             }
         }
-        // --- 修复：删除留言函数 ---
-        async function deleteMessage(originalIndex) {
+        // 删除留言
+        function deleteMessage(originalIndex) {
             // 使用自定义确认弹窗
             showConfirmModal(
                 '确认删除',
                 '确定要删除这条留言吗？',
-                async function() {
+                function() {
                     // 用户确认删除
                     const messagesData = window.messages || messages;
                     if (originalIndex >= 0 && originalIndex < messagesData.length) {
-                        // 显示加载弹窗
-                        showLoadingModal('正在删除留言...');
-                        try {
-                            const messageToDelete = messagesData[originalIndex];
-                            // 记录删除日志
-                            addLog('删除留言', `管理员 ${currentAdminUser} 删除了 ${messageToDelete.name} 的留言`);
-                            // 从数组中删除，并更新全局变量
-                            messagesData.splice(originalIndex, 1);
-                            // 更新全局变量 (这是关键一步)
-                            if (window.messages) {
-                                window.messages = messagesData;
-                            }
-                            // 重新加载
-                            loadMessages();
-                            updateStats();
-                            // 同步到云端
-                            await syncConfigToFC({
-                                pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
-                                pagePasswords: window.pagePasswords || pagePasswords,
-                                adminAccounts: window.adminAccounts || adminAccounts,
-                                messages: window.messages || messages,
-                                adminLogs: window.logs || logs,
-                                siteVisits: window.visits || visits,
-                                timestamp: new Date().toISOString()
-                            });
-                            hideLoadingModal();
-                            showSuccessModal('留言已删除。');
-                        } catch (error) {
-                            hideLoadingModal();
-                            console.error('删除留言失败:', error);
-                            showFailModal('操作失败', '删除留言操作失败，请重试');
+                        // 记录删除日志
+                        addLog('删除留言', `管理员 ${currentAdminUser} 删除了 ${messagesData[originalIndex].name} 的留言`);
+                        // 从数组中删除，并更新全局变量
+                        messagesData.splice(originalIndex, 1);
+                        // 更新全局变量 (这是关键一步)
+                        if (window.messages) {
+                            window.messages = messagesData;
                         }
+                        // 重新加载
+                        loadMessages();
+                        updateStats();
+                        // 同步到云端
+                        syncConfigToFC({
+                            pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
+                            pagePasswords: window.pagePasswords || pagePasswords,
+                            adminAccounts: window.adminAccounts || adminAccounts,
+                            messages: window.messages || messages,
+                            adminLogs: window.logs || logs,
+                            siteVisits: window.visits || visits,
+                            timestamp: new Date().toISOString()
+                        });
+                        showSuccessModal('留言已删除。');
                     }
                 },
                 function() {
