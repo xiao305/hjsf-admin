@@ -1574,41 +1574,45 @@
                 oldPasswordInput.value = '';
                 newPasswordInput.value = '';
             });
-        });
+        }
         // --- 修改：加载并显示留言列表 - 增加分页 ---
         function loadMessages() {
             const messagesData = window.messages || messages;
             const messagesBody = document.getElementById('messagesBody');
             if (!messagesBody) return;
-
             // --- 分页逻辑 ---
             const pageSize = 5; // 每页显示5条
             let currentPage = parseInt(localStorage.getItem('messagesCurrentPage') || '1');
             const totalPages = Math.ceil(messagesData.length / pageSize);
-
             // 确保页码在有效范围内
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
-
             // 更新本地存储
             localStorage.setItem('messagesCurrentPage', currentPage.toString());
-
             // 更新分页控件
             document.getElementById('prevPageBtn').disabled = currentPage === 1;
             document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
             document.getElementById('currentPageNum').textContent = currentPage;
             document.getElementById('totalPagesNum').textContent = totalPages;
-
             // --- 过滤和排序 ---
             messagesBody.innerHTML = '';
-            const sortedMessages = [...messagesData].reverse();
             const filterValue = document.getElementById('messageStatusFilter').value;
-            let filteredMessages = sortedMessages;
+            let filteredMessages = messagesData; // 从原始数据开始过滤
             if (filterValue === 'unread') {
-                filteredMessages = sortedMessages.filter(msg => !msg.read);
+                filteredMessages = messagesData.filter(msg => !msg.read);
             } else if (filterValue === 'read') {
-                filteredMessages = sortedMessages.filter(msg => msg.read);
+                filteredMessages = messagesData.filter(msg => msg.read);
             }
+
+            // --- 关键修改：排序，最新的在最上面 ---
+            // 注意：这里不使用 reverse()，而是使用 sort 按时间戳倒序排列 (如果 timestamp 是字符串且格式正确)
+            // 如果 timestamp 是日期对象，可以这样比较：filteredMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            // 假设 timestamp 是 ISO 字符串，按字典序倒序即可达到目的
+            // 为了确保最新在前，先反转再排序，或者直接使用 sort 倒序
+            // 如果你希望保留原始顺序（除了排序），可以考虑使用 .slice().reverse() 但需小心索引对应关系
+            // 更简单可靠的方式是：先按时间排序（最新的在前），然后截取分页
+            // 所以，这里采用最简单的做法：先排序，再分页
+            filteredMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // 确保最新的在前
 
             // --- 分页计算 ---
             const startIndex = (currentPage - 1) * pageSize;
@@ -1616,10 +1620,21 @@
             const pageMessages = filteredMessages.slice(startIndex, endIndex);
 
             // --- 渲染当前页 ---
-            pageMessages.forEach((message, index) => {
+            pageMessages.forEach((message, indexInFiltered) => { // 使用过滤后的索引
                 const row = document.createElement('tr');
                 const statusClass = message.read ? 'status-read' : 'status-unread';
                 const statusText = message.read ? '已读' : '未读';
+
+                // --- 关键修改：计算原始索引 ---
+                // 由于我们是基于原始 messagesData 进行过滤和排序的，我们需要找到 message 在原始数组中的位置
+                // 由于 filter 和 sort 都是新数组，不能直接使用 indexInFiltered
+                // 最安全的做法是遍历原始数组找到匹配项的索引
+                const originalIndex = messagesData.findIndex(msg => msg === message); // 严格相等，适用于对象引用
+                if (originalIndex === -1) {
+                    console.warn("警告：未能找到消息的原始索引", message);
+                    return; // 跳过这个条目
+                }
+
                 row.innerHTML = `
                     <td>${message.name}</td>
                     <td>${message.phone}</td>
@@ -1627,28 +1642,39 @@
                     <td>${message.timestamp}</td>
                     <td><span class="read-status ${statusClass}">${statusText}</span></td>
                     <td>
-                        <button class="action-btn" onclick="markAsRead(${index})">标为已读</button>
-                        <button class="action-btn delete-btn" onclick="deleteMessage(${index})">删除</button>
+                        ${
+                            message.read ? '' // 如果已读，则不显示“标为已读”按钮
+                            : `<button class="action-btn" onclick="markAsRead(${originalIndex})">标为已读</button>`
+                        }
+                        <button class="action-btn delete-btn" onclick="deleteMessage(${originalIndex})">删除</button>
                     </td>
                 `;
                 messagesBody.appendChild(row);
             });
         }
-        // 标记留言为已读
-        function markAsRead(index) {
+        // --- 修改：标记留言为已读 ---
+        function markAsRead(originalIndex) {
             const messagesData = window.messages || messages;
-            if (index >= 0 && index < messagesData.length) {
+            if (originalIndex >= 0 && originalIndex < messagesData.length) {
+                const messageToMark = messagesData[originalIndex]; // 获取目标消息对象
+                // 检查是否已经是已读
+                if (messageToMark.read) {
+                    console.log("消息已为已读状态，无需重复操作");
+                    showSuccessModal('该留言已是已读状态。');
+                    loadMessages(); // 重新加载以反映UI更新
+                    return;
+                }
                 // 修改本地数据
-                messagesData[index].read = true;
+                messageToMark.read = true;
                 // 更新全局变量 (这是关键一步)
                 if (window.messages) {
-                    window.messages[index].read = true;
+                    window.messages[originalIndex].read = true;
                 }
                 // 记录日志
-                addLog('标为已读', `管理员 ${currentAdminUser} 将 ${messagesData[index].name} 的留言标为已读`);
+                addLog('标为已读', `管理员 ${currentAdminUser} 将 ${messageToMark.name} 的留言标为已读`);
                 // 重新加载
-                loadMessages();
-                updateStats();
+                loadMessages(); // 重新加载以更新UI和分页
+                updateStats(); // 更新统计信息
                 // 同步到云端
                 syncConfigToFC({
                     pageStatusConfig: window.pageStatusConfig || pageStatusConfig,
@@ -1658,8 +1684,16 @@
                     adminLogs: window.logs || logs,
                     siteVisits: window.visits || visits,
                     timestamp: new Date().toISOString()
+                }).then(() => {
+                    console.log("✅ 已同步标记已读操作到云端");
+                }).catch((error) => {
+                    console.error('❌ 同步标记已读失败:', error);
+                    // 可以选择不显示失败弹窗，因为本地已更改
                 });
                 showSuccessModal('留言已标为已读。');
+            } else {
+                console.error("❌ markAsRead: 无效的原始索引", originalIndex);
+                showFailModal('操作失败', '无法定位到指定的留言。');
             }
         }
         // 删除留言
@@ -1728,7 +1762,11 @@
                 const statusClass = message.read ? 'status-read' : 'status-unread';
                 const statusText = message.read ? '已读' : '未读';
                 // --- 关键修改：使用原始数组的索引 ---
-                const originalIndex = sortedMessages.indexOf(message);
+                const originalIndex = messagesData.findIndex(msg => msg === message); // 严格相等，适用于对象引用
+                if (originalIndex === -1) {
+                    console.warn("警告：未能找到消息的原始索引", message);
+                    return; // 跳过这个条目
+                }
                 row.innerHTML = `
                     <td>${message.name}</td>
                     <td>${message.phone}</td>
@@ -1736,7 +1774,10 @@
                     <td>${message.timestamp}</td>
                     <td><span class="read-status ${statusClass}">${statusText}</span></td>
                     <td>
-                        <button class="action-btn" onclick="markAsRead(${originalIndex})">标为已读</button>
+                        ${
+                            message.read ? '' // 如果已读，则不显示“标为已读”按钮
+                            : `<button class="action-btn" onclick="markAsRead(${originalIndex})">标为已读</button>`
+                        }
                         <button class="action-btn delete-btn" onclick="deleteMessage(${originalIndex})">删除</button>
                     </td>
                 `;
@@ -2030,7 +2071,6 @@
                 loadMessages();
             }
         });
-
         document.getElementById('nextPageBtn').addEventListener('click', function() {
             const currentPage = parseInt(localStorage.getItem('messagesCurrentPage') || '1');
             const totalPages = Math.ceil((window.messages || messages).length / 5);
